@@ -16,7 +16,8 @@ def main() -> int:
     timestamp: str | None = None
     prompt: str | None = None
 
-    for group_file in ["results-group1.json", "results-group2.json"]:
+    for group_file in ["results-group1.json", "results-group2.json",
+                        "results-openrouter-group1.json", "results-openrouter-group2.json"]:
         path = SCRIPT_DIR / group_file
         if path.exists():
             with open(path) as f:
@@ -56,7 +57,8 @@ def main() -> int:
     write_run(merged_run)
     print(f"✓ Updated history.db with new run ({success_count}/{total_count} models passed)")
 
-    for group_file in ["results-group1.json", "results-group2.json"]:
+    for group_file in ["results-group1.json", "results-group2.json",
+                        "results-openrouter-group1.json", "results-openrouter-group2.json"]:
         path = SCRIPT_DIR / group_file
         if path.exists():
             path.unlink()
