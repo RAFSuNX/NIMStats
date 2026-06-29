@@ -34,3 +34,6 @@ scripts/results*.json
 # Python
 __pycache__/
 *.pyc
+
+# DB lives on data branch, not main
+history.db
