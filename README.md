@@ -1,262 +1,211 @@
-<div align="center">
+# NIMStats - AI Model Benchmark Dashboard
 
-[![NIMStats Banner](https://capsule-render.vercel.app/api?type=waving&color=76b900&height=220&section=header&text=NIMStats&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Real-Time%20NVIDIA%20NIM%20Benchmark%20Dashboard&descSize=22&descAlignY=60&descAlign=50)](https://nimstats.maurodruwel.be/)
+A community-driven benchmarking dashboard for NVIDIA NIM and OpenRouter free models. Automated hourly benchmarks run via GitHub Actions and publish results to a static, interactive dashboard with zero infrastructure cost.
 
-[![CI](https://github.com/MauroDruwel/NIMStats/actions/workflows/benchmark.yml/badge.svg)](https://github.com/MauroDruwel/NIMStats/actions)
-[![Live Dashboard](https://img.shields.io/badge/🌐%20live-nimstats.maurodruwel.be-76b900?style=flat-square)](https://nimstats.maurodruwel.be/)
-[![Models](https://img.shields.io/badge/models-20-blue?style=flat-square)](https://build.nvidia.com/models)
-[![License: MIT](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](https://github.com/MauroDruwel/NIMStats/pulls)
-[![Stars](https://img.shields.io/github/stars/MauroDruwel/NIMStats?style=flat-square&color=gold)](https://github.com/MauroDruwel/NIMStats/stargazers)
-
-<br/>
-
-> **Community-driven benchmarking of 20 NVIDIA NIM models — fully automated, zero infra cost, self-hostable in minutes.**
-
-<br/>
-
-**[🚀 View Live Dashboard](https://nimstats.maurodruwel.be/) · [📖 Docs](#-quick-start) · [🤝 Contribute](#-contributing) · [💬 Discussions](https://github.com/MauroDruwel/NIMStats/discussions)**
-
-</div>
+**Live dashboard:** [nimstats.maurodruwel.be](https://nimstats.maurodruwel.be/)
 
 ---
 
-## ✨ What is NIMStats?
+## What it does
 
-NIMStats automatically benchmarks **20 NVIDIA NIM models** every hour using GitHub Actions and publishes the results to a beautiful, interactive dashboard. No servers, no subscriptions — just fork, add your API key, and go.
+NIMStats tests AI model API endpoints every hour and records response time, throughput, and reliability. Results are stored in a SQLite database committed to the repository and queried client-side via WebAssembly. No server required.
 
-<div align="center">
+**Models tested:**
+- 20 NVIDIA NIM models across providers including DeepSeek, Qwen, Mistral, Meta, Google, NVIDIA, and others
+- All free-tier OpenRouter models, fetched dynamically at benchmark time
 
-| 🏎️ Hourly Benchmarks | 📊 Interactive Charts | 🔁 Zero Infrastructure | 🌍 Fully Open-Source |
-|:---:|:---:|:---:|:---:|
-| Automatic via GitHub Actions | Response time, throughput & trends | Static site + free CI/CD | Fork and self-host in minutes |
-
-</div>
+**Metrics collected per model per run:**
+- Response time in milliseconds
+- Tokens generated and total tokens
+- Success or failure with error classification
+- Throughput in tokens per second
 
 ---
 
-## ⚡ Quick Start
+## Dashboard tabs
 
-> Get your own benchmarking dashboard running in under 5 minutes.
+**Overview** - Hero cards showing the current fastest model, highest throughput model, and most reliable model. Includes a NIM vs OpenRouter face-off panel, live status grid from the latest run, and success rate trend chart. All sections filterable by provider source.
 
-### 1. Fork & Clone
+**Leaderboard** - All models ranked by composite score. Sortable by any column. Filterable by source (NIM or OpenRouter) and by minimum run count to exclude models with insufficient data. Coverage-weighted scoring prevents models with a single lucky run from ranking highly.
+
+**Explorer** - Deep dive into a single model. Shows response time history chart, error breakdown donut chart, availability heatmap, and a run history table with links to view raw responses.
+
+**Timeline** - Full history of benchmark runs in reverse chronological order. Filter by last 24h, 48h, or 7d. Expand any run to see per-model results.
+
+**Compare** - Head-to-head comparison of any two models. Overlay chart of response times, win-rate statistics, and side-by-side metric table.
+
+---
+
+## Quick start
+
+Get your own benchmarking dashboard running in under 5 minutes.
+
+### 1. Fork and clone
 
 ```bash
-git clone https://github.com/MauroDruwel/NIMStats.git
+git clone https://github.com/your-username/NIMStats.git
 cd NIMStats
 ```
 
-### 2. Get a Free API Key
+### 2. Get API keys
 
-Visit **[build.nvidia.com](https://build.nvidia.com)** → Create a free account → Copy your API key.
+- **NVIDIA NIM:** Create a free account at [build.nvidia.com](https://build.nvidia.com) and copy your API key.
+- **OpenRouter:** Create a free account at [openrouter.ai](https://openrouter.ai) and copy your API key.
 
-### 3. Add the Secret
+### 3. Add repository secrets
 
-In your forked repo: **Settings → Secrets and variables → Actions → New repository secret**
+Go to your fork: **Settings - Secrets and variables - Actions - New repository secret**
 
-| Name | Value |
-|------|-------|
+| Secret name | Value |
+|---|---|
 | `NIM_API_KEY` | Your NVIDIA NIM API key |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key |
 
-### 4. Deploy the Dashboard
+### 4. Deploy the dashboard
 
 | Platform | Steps |
-|----------|-------|
-| **Cloudflare Pages** | Connect repo in [Cloudflare Pages](https://pages.cloudflare.com/) |
-| **GitHub Pages** | Settings → Pages → Deploy from `main` |
-| **Netlify / Vercel** | Connect repo for instant auto-deploy |
+|---|---|
+| GitHub Pages | Settings - Pages - Deploy from branch `main` |
+| Cloudflare Pages | Connect repo at [pages.cloudflare.com](https://pages.cloudflare.com) |
+| Netlify or Vercel | Connect repo for automatic deploys |
 
-### 5. Run Your First Benchmark
+### 5. Run your first benchmark
 
-**Actions → Benchmark NVIDIA NIM Models → Run workflow**
+Go to **Actions - Benchmark NIM + OpenRouter Models - Run workflow**
 
-That's it — your dashboard auto-refreshes every hour. ✨
-
----
-
-## 📊 Dashboard Features
-
-<div align="center">
-
-| Tab | What you get |
-|-----|-------------|
-| **📊 Overview** | 5 animated KPI cards · success trend charts · top-10 speed & throughput bars · model reliability pills |
-| **🏆 Leaderboard** | Composite score rankings · sortable columns · SVG sparklines · trend indicators (↑↓→) · provider chips |
-| **🔬 Explorer** | Per-model deep dive · response time history chart · error breakdown donut · availability heatmap |
-| **⏱ Timeline** | Filterable run history (All / 24h / 48h / 7d) · expandable run cards with full per-model detail |
-| **⚔️ Compare** | Head-to-head overlay chart · win-rate stats · side-by-side metric comparison |
-
-</div>
+The dashboard auto-updates on each push. The workflow also runs automatically every hour.
 
 ---
 
-## 🤖 Benchmarked Models
+## Architecture
 
-<details>
-<summary><b>20 models across 11 providers — click to expand</b></summary>
+```
+GitHub Actions (hourly)
+  |
+  +-- Job: test_nim_group1     (NIM models 1-10)  --+
+  |                                                   |
+  +-- Job: test_nim_group2     (NIM models 11-20) --+-- merge_and_update --> history.db committed
+  |                                                   |
+  +-- Job: test_openrouter_group1 (OR free, half) --+
+  |                                                   |
+  +-- Job: test_openrouter_group2 (OR free, half) --+
 
-<br/>
+Static site (GitHub Pages / Cloudflare / Netlify)
+  Serves index.html + history.db
+  Browser loads history.db via sql.js (WebAssembly)
+  All queries run client-side
+```
 
-| Provider | Model | Highlight |
-|----------|-------|-----------|
-| **DeepSeek** | `deepseek-ai/deepseek-v4-flash` | Fast MoE, optimized for speed |
-| **DeepSeek** | `deepseek-ai/deepseek-v4-pro` | Professional-grade reasoning |
-| **DeepSeek** | `deepseek-ai/deepseek-v3.2` | Latest with improved reasoning |
-| **Z-AI** | `z-ai/glm-5.1` | Superior code understanding |
-| **Z-AI** | `z-ai/glm-4.7` | Strong mathematical capabilities |
-| **MiniMax** | `minimaxai/minimax-m2.7` | Efficient inference model |
-| **MiniMax** | `minimaxai/minimax-m2.5` | Previous generation MiniMax |
-| **NVIDIA** | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA's 120B flagship |
-| **NVIDIA** | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | Compact omni reasoning model |
-| **Moonshot** | `moonshotai/kimi-k2.6` | Context-optimized model |
-| **Moonshot** | `moonshotai/kimi-k2-instruct` | Instruction-tuned Kimi |
-| **OpenAI** | `openai/gpt-oss-120b` | Open-source 120B |
-| **Google** | `google/gemma-4-31b-it` | Lightweight edge inference |
-| **Qwen** | `qwen/qwen3-coder-480b-a35b-instruct` | Specialized coding (480B MoE) |
-| **Qwen** | `qwen/qwen2.5-coder-32b-instruct` | Lightweight Qwen coder |
-| **Qwen** | `qwen/qwen3.5-397b-a17b` | Flagship Qwen (397B) |
-| **Qwen** | `qwen/qwen3.5-122b-a10b` | Mid-range Qwen 3.5 MoE |
-| **Mistral** | `mistralai/devstral-2-123b-instruct-2512` | Developer-focused (123B) |
-| **Mistral** | `mistralai/mistral-large-3-675b-instruct-2512` | Largest Mistral (675B) |
-| **Mistral** | `mistralai/mistral-medium-3.5-128b` | Efficient medium-scale Mistral |
-| **Meta** | `meta/llama-3_3-70b-instruct` | Llama 3.3 70B |
-| **Meta** | `meta/llama-4-maverick-17b-128e-instruct` | Llama 4 Maverick (128 experts) |
-| **Meta** | `meta/llama-3.2-90b-vision-instruct` | Multimodal 90B vision model |
-| **StepFun** | `stepfun-ai/step-3.5-flash` | Ultra-fast flash model |
-| **StepFun** | `stepfun-ai/step-3.7-flash` | Latest high-performance flash |
-
-</details>
+Four jobs run in parallel, cutting wall-clock time roughly in half. The merge job waits for all four, combines results into a single run entry, and commits `history.db`.
 
 ---
 
-## 🏗️ How It Works
+## Scripts
 
-```
-┌──────────────────── GitHub Actions (every hour) ──────────────────────┐
-│                                                                               │
-│   ┌─────────────────────┐        ┌─────────────────────┐                    │
-│   │  Job 1 — Group A    │        │  Job 2 — Group B    │  (run in parallel) │
-│   │  10 NIM models      │        │  10 NIM models      │                    │
-│   └──────────┬──────────┘        └──────────┬──────────┘                    │
-│              └──────────────┬───────────────┘                               │
-│                    ┌────────▼────────┐                                       │
-│                    │  Merge + commit │  → history.db updated in repo         │
-│                    └─────────────────┘                                       │
-└───────────────────────────────────────────────────────────────────────────── ┘
-                                     │
-                          ┌──────────▼──────────┐
-                          │  Static Dashboard   │  rebuilds on each push
-                          │  (Pages / Netlify)  │
-                          └─────────────────────┘
-```
+| Script | Purpose |
+|---|---|
+| `scripts/test_models.py` | Benchmarks NVIDIA NIM models. Reads `NIM_API_KEY` and `MODEL_GROUP` env vars. Writes `scripts/results.json`. |
+| `scripts/test_openrouter.py` | Fetches all free OpenRouter models dynamically via the `/models` endpoint, then benchmarks them. Reads `OPENROUTER_API_KEY` and `MODEL_GROUP`. Writes `scripts/results.json`. |
+| `scripts/merge_results.py` | Merges the four parallel result files into one run and writes to `history.db`. |
+| `scripts/db_utils.py` | Shared SQLite utilities used by both benchmark and merge scripts. |
 
-**Parallel jobs = ~50% faster benchmarks** ⚡
-
----
-
-## 🛠️ Customization
-
-<details>
-<summary><b>Change the benchmark prompt</b></summary>
-
-Edit `PROMPT` in `scripts/test_models.py`:
-```python
-PROMPT = "Your custom prompt here"
-```
-</details>
-
-<details>
-<summary><b>Add or remove models</b></summary>
-
-Edit `ALL_MODELS` in `scripts/test_models.py`:
-```python
-ALL_MODELS = [
-    "your/custom-model",
-    # ...
-]
-```
-</details>
-
-<details>
-<summary><b>Change the schedule</b></summary>
-
-Edit `.github/workflows/benchmark.yml`:
-```yaml
-- cron: '0 */6 * * *'  # Every 6 hours instead of every hour
-```
-</details>
-
-<details>
-<summary><b>Run locally</b></summary>
+### Run locally
 
 ```bash
 # Serve the dashboard
-python3 -m http.server 8000
-# Open http://localhost:8000
+python3 -m http.server 8080
+# Open http://localhost:8080
 
-# Run benchmarks manually (requires NIM_API_KEY env var)
+# Run NIM benchmarks (requires NIM_API_KEY)
 export NIM_API_KEY=your_key_here
 python3 scripts/test_models.py
+
+# Run OpenRouter benchmarks (requires OPENROUTER_API_KEY)
+export OPENROUTER_API_KEY=your_key_here
+python3 scripts/test_openrouter.py
+
+# Merge results manually into history.db
+python3 scripts/merge_results.py
 ```
-</details>
 
 ---
 
-## 📦 Data Storage
+## Database schema
 
-`history.db` is a SQLite database persisted in the repo — the single source of truth. The browser loads it via [sql.js](https://sql.js.org/) (WebAssembly) and queries it entirely client-side. `scripts/results.json` is a temporary per-job artifact that is never committed.
-
-**Schema:**
+`history.db` is a SQLite file committed to the repository. The browser loads it via [sql.js](https://sql.js.org) and queries it entirely client-side.
 
 ```sql
-runs          (id, timestamp, prompt, success_count, total_models, fastest_model, fastest_time)
-model_results (run_id, model, success, error, response_time, tokens_generated, total_tokens, response)
+CREATE TABLE runs (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp     TEXT    NOT NULL,
+    prompt        TEXT,
+    success_count INTEGER,
+    total_models  INTEGER,
+    fastest_model TEXT,
+    fastest_time  INTEGER
+);
+
+CREATE TABLE model_results (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id           INTEGER NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    model            TEXT    NOT NULL,
+    success          INTEGER NOT NULL DEFAULT 0,
+    error            TEXT,
+    response_time    INTEGER,
+    tokens_generated INTEGER,
+    total_tokens     INTEGER,
+    response         TEXT
+);
 ```
 
-**Benchmark parameters:** `temperature: 0.7` · `top_p: 0.9` · `max_tokens: 500` · OpenAI-compatible API
+Benchmark parameters: `temperature: 0.7`, `top_p: 0.9`, `max_tokens: 500`, OpenAI-compatible API format.
+
+The database is capped at 720 runs (30 days of hourly benchmarks). Older runs are pruned automatically on each write.
 
 ---
 
-## 🤝 Contributing
+## Customization
 
-Contributions are what make the open-source community amazing. Any contribution you make is **greatly appreciated**!
+**Change the benchmark prompt** - Edit `PROMPT` in `scripts/test_models.py` and `scripts/test_openrouter.py`.
 
-1. **Fork** the repository
-2. Create your feature branch: `git checkout -b feat/amazing-feature`
-3. Commit your changes: `git commit -m 'feat: add amazing feature'`
-4. Push to the branch: `git push origin feat/amazing-feature`
-5. Open a **Pull Request**
+**Add or remove NIM models** - Edit `ALL_MODELS` in `scripts/test_models.py`.
 
-**Ideas for contributions:**
-- 🆕 Add new NIM models to the benchmark list
-- 📊 New chart types or dashboard widgets
-- 🌐 Internationalization / translations
-- 🐛 Bug fixes and performance improvements
-- 📖 Improve documentation
+**Change the benchmark schedule** - Edit the cron expression in `.github/workflows/benchmark.yml`:
+```yaml
+- cron: '0 */6 * * *'  # every 6 hours
+```
 
-Please read through open [Issues](https://github.com/MauroDruwel/NIMStats/issues) before starting — someone might already be working on it!
+**Disable OpenRouter benchmarks** - Remove the `test_openrouter_group1`, `test_openrouter_group2` jobs from the workflow and their entries in the `needs` list of `merge_and_update`.
 
 ---
 
-## 🔗 Resources
+## Scoring
 
-- [NVIDIA NIM API Documentation](https://docs.api.nvidia.com/nim/)
-- [NVIDIA Model Catalog](https://build.nvidia.com/models)
-- [GitHub Actions Docs](https://docs.github.com/en/actions)
-- [sql.js — SQLite in the browser](https://sql.js.org/)
+Each model is assigned a composite score from 0 to 100:
 
----
+- Uptime contributes 40 points
+- Speed score (relative to fastest model) contributes up to 30 points
+- Throughput score (relative to highest tok/s) contributes up to 30 points
 
-## 📄 License
-
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+A coverage weight is applied based on how many runs a model has participated in relative to the runs since it was first seen. Models with fewer than 5 runs are penalised to prevent newly-added models from ranking highly on limited data.
 
 ---
 
-<div align="center">
+## Contributing
 
-Made with ❤️ for the ML community · [⭐ Star this repo](https://github.com/MauroDruwel/NIMStats) if you find it useful!
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Commit your changes: `git commit -m 'feat: describe your change'`
+4. Push and open a pull request
 
-[![footer](https://capsule-render.vercel.app/api?type=waving&color=76b900&height=100&section=footer)](https://nimstats.maurodruwel.be/)
+Ideas for contributions:
+- Add new NIM or OpenRouter models
+- New chart types or dashboard widgets
+- Bug fixes and performance improvements
+- Documentation improvements
 
-</div>
+---
+
+## License
+
+MIT License. See `LICENSE` for details.
