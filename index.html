@@ -1718,8 +1718,12 @@ async function init() {
   try {
     const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}` });
 
-    // Use cache on repeat visits
-    const res = await fetch('history.db', { cache: 'default' });
+    // Fetch DB from gh-pages branch (served via GitHub Pages, CORS open)
+    // Falls back to relative path for local dev
+    const dbUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'history.db'
+      : 'https://rafsunx.github.io/NIMStats/history.db';
+    const res = await fetch(dbUrl, { cache: 'default' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const buf = await res.arrayBuffer();
     state.db = new SQL.Database(new Uint8Array(buf));

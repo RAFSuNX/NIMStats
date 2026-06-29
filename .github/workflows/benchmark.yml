@@ -107,10 +107,10 @@ jobs:
           cp history.db /tmp/history.db
 
           # Switch to data branch (orphan if it doesn't exist yet)
-          if git fetch origin data-branch 2>/dev/null; then
-            git checkout data-branch
+          if git fetch origin gh-pages 2>/dev/null; then
+            git checkout gh-pages
           else
-            git checkout --orphan data-branch
+            git checkout --orphan gh-pages
             git rm -rf . --quiet
           fi
 
@@ -120,7 +120,7 @@ jobs:
           git commit --allow-empty -m "data: benchmark results"
 
           # Force push - single commit forever, no log spam
-          git push origin data-branch --force
+          git push origin gh-pages --force
 
       - name: Trigger Cloudflare Pages deploy
         if: ${{ env.CF_DEPLOY_HOOK != '' }}
