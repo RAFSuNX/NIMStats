@@ -514,8 +514,34 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
   .nav-tab .tab-label{font-size:9px;letter-spacing:0.3px}
   .nav-tab.active::after{left:4px;right:4px}
 
-  /* Layout */
-  main{padding:14px 12px}
+  /* Layout - full width, minimal gutters */
+  main{padding:8px 0}
+  .card{border-radius:0;border-left:none;border-right:none;margin:0}
+  .chart-row{gap:0}
+  .chart-row > .card{border-bottom:none}
+  .chart-row > .card:last-child{border-bottom:1px solid var(--border)}
+  .hero-row{gap:0;margin-bottom:0}
+  .hero-card{border-radius:0;border-left:none;border-right:none;border-bottom:none;margin:0}
+  .hero-card:last-child{border-bottom:1px solid var(--border)}
+  .table-wrap{border-radius:0;border-left:none;border-right:none}
+  .run-card{border-radius:0;border-left:none;border-right:none;border-bottom:none}
+  .run-card:last-child{border-bottom:1px solid var(--border)}
+  .run-cards{gap:0}
+  .kpi-grid{gap:0;grid-template-columns:repeat(2,1fr);margin-bottom:0}
+  .kpi-card{border-radius:0;border-right:none;border-bottom:none}
+  .kpi-card:nth-child(even){border-right:1px solid var(--border)}
+  .kpi-card:nth-last-child(-n+2){border-bottom:1px solid var(--border)}
+  .explorer-header{border-radius:0;border-left:none;border-right:none}
+  .stat-card{border-radius:0;border-right:none;border-bottom:none}
+  .stats-row{gap:0;border:1px solid var(--border);margin-bottom:0}
+  .stats-row .stat-card:nth-child(even){border-right:none}
+  .stats-row .stat-card{border-bottom:1px solid var(--border)}
+  .latest-run-bar{border-radius:0;border-left:none;border-right:none;margin-bottom:0}
+  #provider-faceoff,#live-status{padding:0}
+  .section-header{padding:12px 16px 0;margin-bottom:12px}
+  .table-controls{padding:0 12px;margin-bottom:8px}
+  .timeline-controls{padding:0 12px;margin-bottom:8px}
+  .model-selector-wrap{padding:0 12px;margin-bottom:0}
 
   /* Section header */
   .section-header{flex-direction:column;align-items:flex-start;gap:10px}
