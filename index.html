@@ -1076,17 +1076,24 @@ function loadFromDb(db) {
   }));
   const runById = new Map(runs.map((r, i) => [r._dbId, i]));
 
+  // Check if quality_score column exists (older DBs won't have it)
+  const cols = db.exec("PRAGMA table_info(model_results)");
+  const colNames = cols.length ? cols[0].values.map(r => r[1]) : [];
+  const hasQuality = colNames.includes('quality_score');
+
   const resQ = db.exec(
-    'SELECT run_id, model, success, error, response_time, tokens_generated, total_tokens, quality_score FROM model_results ORDER BY run_id ASC'
+    `SELECT run_id, model, success, error, response_time, tokens_generated, total_tokens${hasQuality ? ', quality_score' : ''} FROM model_results ORDER BY run_id ASC`
   );
   if (resQ.length && resQ[0].values.length) {
-    for (const [run_id, model, success, error, rt, tg, tt, qs] of resQ[0].values) {
+    for (const row of resQ[0].values) {
+      const [run_id, model, success, error, rt, tg, tt] = row;
+      const qs = hasQuality ? (row[7] ?? null) : null;
       const idx = runById.get(run_id);
       if (idx !== undefined) {
         runs[idx].models.push({
           model, success: success === 1, error: error || null,
           responseTime: rt, tokensGenerated: tg, totalTokens: tt,
-          qualityScore: qs ?? null, response: null
+          qualityScore: qs, response: null
         });
       }
     }
