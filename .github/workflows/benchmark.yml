@@ -67,6 +67,9 @@ jobs:
         with:
           path: scripts/
 
+      - name: Fetch existing history.db from gh-pages
+        run: git fetch origin gh-pages 2>/dev/null && git show origin/gh-pages:history.db > history.db 2>/dev/null || true
+
       - name: Merge results and update history
         run: |
           for dir in scripts/results-*/; do
