@@ -1,74 +1,103 @@
-name: Benchmark NVIDIA NIM Models
+name: Benchmark NIM + OpenRouter Models
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'  # every hour
 
 jobs:
-  test_group1:
+  # ── NVIDIA NIM ──────────────────────────────────────────────────────────────
+  test_nim_group1:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      
-      - name: Test model group 1
+      - uses: actions/checkout@v4
+      - name: Test NIM group 1
         env:
           NIM_API_KEY: ${{ secrets.NIM_API_KEY }}
           MODEL_GROUP: group1
         run: python3 scripts/test_models.py
-      
-      - name: Upload group1 results
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: results-group1
           path: scripts/results.json
           retention-days: 1
 
-  test_group2:
+  test_nim_group2:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      
-      - name: Test model group 2
+      - uses: actions/checkout@v4
+      - name: Test NIM group 2
         env:
           NIM_API_KEY: ${{ secrets.NIM_API_KEY }}
           MODEL_GROUP: group2
         run: python3 scripts/test_models.py
-      
-      - name: Upload group2 results
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: results-group2
           path: scripts/results.json
           retention-days: 1
 
-  merge_and_update:
-    needs: [test_group1, test_group2]
+  # ── OpenRouter free models ──────────────────────────────────────────────────
+  test_openrouter_group1:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      
+      - uses: actions/checkout@v4
+      - name: Test OpenRouter free models (first half)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MODEL_GROUP: group1
+        run: python3 scripts/test_openrouter.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-openrouter-group1
+          path: scripts/results.json
+          retention-days: 1
+
+  test_openrouter_group2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test OpenRouter free models (second half)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MODEL_GROUP: group2
+        run: python3 scripts/test_openrouter.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-openrouter-group2
+          path: scripts/results.json
+          retention-days: 1
+
+  # ── Merge & commit ──────────────────────────────────────────────────────────
+  merge_and_update:
+    needs: [test_nim_group1, test_nim_group2, test_openrouter_group1, test_openrouter_group2]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Download all results
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           path: scripts/
-      
+
       - name: Merge results and update history
         run: |
           mv scripts/results-group1/results.json scripts/results-group1.json || true
           mv scripts/results-group2/results.json scripts/results-group2.json || true
+          mv scripts/results-openrouter-group1/results.json scripts/results-openrouter-group1.json || true
+          mv scripts/results-openrouter-group2/results.json scripts/results-openrouter-group2.json || true
           python3 scripts/merge_results.py
-      
+
       - name: Commit and push results
         run: |
           git config user.name "github-actions[bot]"
