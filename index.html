@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIMStats — AI Model Benchmark Dashboard</title>
+<title>NIMStats - AI Model Benchmark Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -691,7 +691,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
           <div id="provider-faceoff"></div>
         </div>
         <div class="card">
-          <div class="card-title"><span class="dot"></span>Live Status — Latest Run</div>
+          <div class="card-title"><span class="dot"></span>Live Status - Latest Run</div>
           <div id="live-status" style="max-height:280px;overflow-y:auto"></div>
         </div>
       </div>
@@ -714,7 +714,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
       <div class="section-header mb-4">
         <div class="section-title-wrap">
           <div class="section-title">Model Leaderboard</div>
-          <div class="section-sub">Ranked by composite score — click a row to explore that model</div>
+          <div class="section-sub">Ranked by composite score - click a row to explore that model</div>
         </div>
       </div>
       <div class="table-controls">
@@ -770,7 +770,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
           <div class="card-title"><span class="dot"></span>Error Breakdown</div>
           <div style="position:relative;height:264px;display:flex;align-items:center;justify-content:center">
             <canvas id="chart-explorer-errors"></canvas>
-            <div id="explorer-no-errors" class="no-data" style="display:none">100% Success Rate — No Errors</div>
+            <div id="explorer-no-errors" class="no-data" style="display:none">100% Success Rate - No Errors</div>
           </div>
         </div>
       </div>
@@ -959,8 +959,8 @@ function avg(arr) {
   if (!arr.length) return 0;
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
-function fmtMs(ms) { return ms == null ? '—' : (ms / 1000).toFixed(2) + 's'; }
-function fmtTps(tps) { return (!tps || tps <= 0) ? '—' : tps.toFixed(1) + ' t/s'; }
+function fmtMs(ms) { return ms == null ? '-' : (ms / 1000).toFixed(2) + 's'; }
+function fmtTps(tps) { return (!tps || tps <= 0) ? '-' : tps.toFixed(1) + ' t/s'; }
 function fmtPct(v) { return (v * 100).toFixed(1) + '%'; }
 function isOpenRouter(m) { return m.includes(':free'); }
 function shortModel(m) { return (m.split('/')[1] || m).replace(/:free$/, ''); }
@@ -1182,7 +1182,7 @@ function renderOverview() {
   if (latestRun) {
     const lrTotal = latestRun.summary?.totalModels || latestRun.models.length;
     const lrSucc  = latestRun.summary?.successCount ?? latestRun.models.filter(m => m.success).length;
-    const lrFastest = latestRun.summary?.fastestModel ? shortModel(latestRun.summary.fastestModel) : '—';
+    const lrFastest = latestRun.summary?.fastestModel ? shortModel(latestRun.summary.fastestModel) : '-';
     const lrTime = latestRun.summary?.fastestTime ? (latestRun.summary.fastestTime / 1000).toFixed(2) + 's' : '';
     const lrPct = Math.round(lrSucc / lrTotal * 100);
     const lrColor = lrPct >= 70 ? '#22c55e' : lrPct >= 40 ? '#f59e0b' : '#ef4444';
@@ -1220,7 +1220,7 @@ function renderOverview() {
     const noData = `<div class="hero-metric" style="color:var(--text-muted);font-size:16px">No data yet</div>`;
     return `<div class="hero-card" onclick="${onclick}">
       <div class="hero-label"><span class="dot"></span>${label}</div>
-      <div class="hero-model">${model ? shortModel(model) : '—'}</div>
+      <div class="hero-model">${model ? shortModel(model) : '-'}</div>
       ${model ? metricHtml : noData}
       ${model ? `<div class="hero-meta">${sourceBadge(model)}${providerChip(model, true)}${metaHtml}</div>` : ''}
     </div>`;
@@ -1272,8 +1272,8 @@ function renderOverview() {
     const nimWins = nv != null && ov != null && (higherBetter ? nv > ov : nv < ov);
     const orWins  = nv != null && ov != null && (higherBetter ? ov > nv : ov < nv);
     return `
-      <div class="faceoff-stat"><div class="faceoff-stat-val ${nimWins?'faceoff-winner':''}">${nv != null ? fmt(nv) : '—'}</div><div class="faceoff-stat-lbl">${labelNim}</div></div>
-      <div class="faceoff-stat" style="text-align:right"><div class="faceoff-stat-val ${orWins?'faceoff-winner':''}">${ov != null ? fmt(ov) : '—'}</div><div class="faceoff-stat-lbl">${labelOr}</div></div>`;
+      <div class="faceoff-stat"><div class="faceoff-stat-val ${nimWins?'faceoff-winner':''}">${nv != null ? fmt(nv) : '-'}</div><div class="faceoff-stat-lbl">${labelNim}</div></div>
+      <div class="faceoff-stat" style="text-align:right"><div class="faceoff-stat-val ${orWins?'faceoff-winner':''}">${ov != null ? fmt(ov) : '-'}</div><div class="faceoff-stat-lbl">${labelOr}</div></div>`;
   }
 
   const faceoffRows = [
@@ -1287,12 +1287,12 @@ function renderOverview() {
     <div class="faceoff-grid">
       <div class="faceoff-side">
         <div class="faceoff-name" style="background:rgba(118,185,0,0.1);color:#76b900;border:1px solid rgba(118,185,0,0.25)">NIM</div>
-        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.nimVal>r.orVal:r.nimVal<r.orVal))?'faceoff-winner':''}">${r.nimVal!=null?r.fmt(r.nimVal):'—'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
+        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.nimVal>r.orVal:r.nimVal<r.orVal))?'faceoff-winner':''}">${r.nimVal!=null?r.fmt(r.nimVal):'-'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
       </div>
       <div class="faceoff-divider"></div>
       <div class="faceoff-side" style="text-align:right">
         <div class="faceoff-name" style="background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25)">OPENROUTER</div>
-        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.orVal>r.nimVal:r.orVal<r.nimVal))?'faceoff-winner':''}">${r.orVal!=null?r.fmt(r.orVal):'—'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
+        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.orVal>r.nimVal:r.orVal<r.nimVal))?'faceoff-winner':''}">${r.orVal!=null?r.fmt(r.orVal):'-'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
       </div>
     </div>`;
 
@@ -1314,7 +1314,7 @@ function renderOverview() {
       const entry = latest?.models.find(m => m.model === model);
       const dotCls = !entry ? 'skip' : entry.success ? 'up' : 'down';
       const timeStr = entry?.success && entry.responseTime
-        ? (entry.responseTime/1000).toFixed(2)+'s' : entry && !entry.success ? 'fail' : '—';
+        ? (entry.responseTime/1000).toFixed(2)+'s' : entry && !entry.success ? 'fail' : '-';
       return `<div class="status-row" onclick="state.explorerModel='${model}';switchTab('explorer')" style="cursor:pointer">
         <span class="status-dot ${dotCls}"></span>
         ${sourceBadge(model)}
@@ -1429,9 +1429,9 @@ function renderLbTable() {
       <td><div class="model-name-cell">${sourceBadge(r.model)}${providerChip(r.model, true)}<span class="model-name-text" title="${r.model}">${shortModel(r.model)}</span>${trendHtml}${partialTag}</div></td>
       <td><div class="score-cell"><span class="score-num" style="color:${scoreColor}">${r.score}</span></div></td>
       <td><div class="uptime-cell"><span class="uptime-val" style="color:${uptimeColor}">${uptimePct}%</span><div class="uptime-bar"><div class="uptime-fill" style="width:${uptimePct}%;background:${uptimeColor}"></div></div></div></td>
-      <td class="mono">${r.avgTime ? (r.avgTime/1000).toFixed(2)+'s' : '—'}</td>
-      <td class="mono">${r.bestTime ? (r.bestTime/1000).toFixed(2)+'s' : '—'}</td>
-      <td class="mono">${r.avgTps ? r.avgTps.toFixed(1)+' t/s' : '—'}</td>
+      <td class="mono">${r.avgTime ? (r.avgTime/1000).toFixed(2)+'s' : '-'}</td>
+      <td class="mono">${r.bestTime ? (r.bestTime/1000).toFixed(2)+'s' : '-'}</td>
+      <td class="mono">${r.avgTps ? r.avgTps.toFixed(1)+' t/s' : '-'}</td>
       <td class="mono text-accent">${r.wins}</td>
       <td>${spark}</td>
     </tr>`;
@@ -1500,7 +1500,7 @@ function renderExplorer() {
     ${sourceBadge(model)}${providerChip(model)}
     <h2>${shortModel(model)}</h2>
     <span style="font-size:12px;color:var(--text-dim);margin-left:auto">
-      Last seen: ${s.lastSeen ? fmtTimestamp(s.lastSeen) : '—'}
+      Last seen: ${s.lastSeen ? fmtTimestamp(s.lastSeen) : '-'}
     </span>`;
 
   const uptimeColor = s.uptime >= 0.7 ? 'var(--success)' : s.uptime >= 0.4 ? 'var(--warning)' : 'var(--danger)';
@@ -1509,7 +1509,7 @@ function renderExplorer() {
   const runsSinceFirst = firstIdx === -1 ? 0 : state.runs.length - firstIdx;
   const coverage = runsSinceFirst ? s.totalRuns / runsSinceFirst : 1;
   const coverageWarn = coverage < 0.5
-    ? `<div style="margin-top:6px;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">Partial data — added recently</div>`
+    ? `<div style="margin-top:6px;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">Partial data - added recently</div>`
     : '';
   document.getElementById('explorer-stats').innerHTML = `
     <div class="stat-card">
@@ -1518,9 +1518,9 @@ function renderExplorer() {
       <div class="stat-sub">${s.successCount} ok · ${s.totalRuns} of ${runsSinceFirst} runs since first seen</div>
       ${coverageWarn}
     </div>
-    <div class="stat-card"><div class="stat-val">${s.avgTime ? (s.avgTime/1000).toFixed(2)+'s' : '—'}</div><div class="stat-label">Avg Response</div></div>
-    <div class="stat-card"><div class="stat-val text-accent">${s.bestTime ? (s.bestTime/1000).toFixed(2)+'s' : '—'}</div><div class="stat-label">Best Response</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${s.avgTps ? s.avgTps.toFixed(1)+' t/s' : '—'}</div><div class="stat-label">Avg Throughput</div></div>`;
+    <div class="stat-card"><div class="stat-val">${s.avgTime ? (s.avgTime/1000).toFixed(2)+'s' : '-'}</div><div class="stat-label">Avg Response</div></div>
+    <div class="stat-card"><div class="stat-val text-accent">${s.bestTime ? (s.bestTime/1000).toFixed(2)+'s' : '-'}</div><div class="stat-label">Best Response</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${s.avgTps ? s.avgTps.toFixed(1)+' t/s' : '-'}</div><div class="stat-label">Avg Throughput</div></div>`;
 
   const labels = state.runs.map(r => fmtTimestampShort(r.timestamp));
   const timeData = s.responseTimes.map(v => v != null ? v / 1000 : null);
@@ -1579,14 +1579,14 @@ function renderExplorer() {
   const tbody = document.getElementById('explorer-run-table');
   const last20 = s.results.map((r, i) => ({ r, i })).slice(-20).reverse();
   tbody.innerHTML = last20.map(({ r, i }) => {
-    if (!r) return `<tr><td class="mono text-dim" style="font-size:11px">${fmtTimestamp(state.runs[i]?.timestamp||'')}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
+    if (!r) return `<tr><td class="mono text-dim" style="font-size:11px">${fmtTimestamp(state.runs[i]?.timestamp||'')}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
     const tps = (r.success && r.responseTime > 0) ? (r.tokensGenerated / (r.responseTime / 1000)).toFixed(1) : null;
     return `<tr>
       <td class="mono" style="font-size:11px">${fmtTimestamp(state.runs[i]?.timestamp||'')}</td>
       <td><span class="status-badge ${r.success?'ok':'fail'}">${r.success?'✓ OK':'✗ Fail'}</span></td>
-      <td class="mono">${r.success ? (r.responseTime/1000).toFixed(2)+'s' : '—'}</td>
-      <td class="mono">${tps ? tps+' t/s' : '—'}</td>
-      <td>${r.success ? `<button class="btn-view" data-run="${i}">View</button>` : '—'}</td>
+      <td class="mono">${r.success ? (r.responseTime/1000).toFixed(2)+'s' : '-'}</td>
+      <td class="mono">${tps ? tps+' t/s' : '-'}</td>
+      <td>${r.success ? `<button class="btn-view" data-run="${i}">View</button>` : '-'}</td>
     </tr>`;
   }).join('');
 
@@ -1620,7 +1620,7 @@ function renderTimeline() {
     const succ = run.summary?.successCount ?? run.models.filter(m => m.success).length;
     const pct = succ / total;
     const badgeCls = pct >= 0.6 ? 'green' : pct >= 0.4 ? 'yellow' : 'red';
-    const fastest = run.summary?.fastestModel ? shortModel(run.summary.fastestModel) : '—';
+    const fastest = run.summary?.fastestModel ? shortModel(run.summary.fastestModel) : '-';
     const fastestTime = run.summary?.fastestTime ? (run.summary.fastestTime/1000).toFixed(2)+'s' : '';
 
     return `<div class="run-card" data-run-idx="${idx}">
@@ -1639,8 +1639,8 @@ function renderTimeline() {
             return `<tr>
               <td style="white-space:nowrap">${sourceBadge(m.model)}${providerChip(m.model, true)}<span style="font-size:12px">${shortModel(m.model)}</span></td>
               <td><span style="font-size:12px;font-weight:700" class="${m.success?'text-green':'text-red'}">${m.success ? '✓' : '✗'}</span></td>
-              <td class="mono">${m.success && m.responseTime ? (m.responseTime/1000).toFixed(2)+'s' : '—'}</td>
-              <td class="mono">${tps ? tps+' t/s' : '—'}</td>
+              <td class="mono">${m.success && m.responseTime ? (m.responseTime/1000).toFixed(2)+'s' : '-'}</td>
+              <td class="mono">${tps ? tps+' t/s' : '-'}</td>
               <td style="font-size:11px;color:var(--text-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.error ? escHtml(m.error) : ''}</td>
             </tr>`;
           }).join('')}</tbody>
@@ -1690,12 +1690,12 @@ function renderCompare() {
 
   const metrics = [
     { label: 'Uptime', a: (sA.uptime*100).toFixed(1)+'%', b: (sB.uptime*100).toFixed(1)+'%', higherBetter: true, av: sA.uptime, bv: sB.uptime },
-    { label: 'Avg Response Time', a: sA.avgTime ? (sA.avgTime/1000).toFixed(2)+'s' : '—', b: sB.avgTime ? (sB.avgTime/1000).toFixed(2)+'s' : '—', higherBetter: false, av: sA.avgTime, bv: sB.avgTime },
-    { label: 'Best Response Time', a: sA.bestTime ? (sA.bestTime/1000).toFixed(2)+'s' : '—', b: sB.bestTime ? (sB.bestTime/1000).toFixed(2)+'s' : '—', higherBetter: false, av: sA.bestTime, bv: sB.bestTime },
-    { label: 'Avg Throughput', a: sA.avgTps ? sA.avgTps.toFixed(1)+' t/s' : '—', b: sB.avgTps ? sB.avgTps.toFixed(1)+' t/s' : '—', higherBetter: true, av: sA.avgTps, bv: sB.avgTps },
+    { label: 'Avg Response Time', a: sA.avgTime ? (sA.avgTime/1000).toFixed(2)+'s' : '-', b: sB.avgTime ? (sB.avgTime/1000).toFixed(2)+'s' : '-', higherBetter: false, av: sA.avgTime, bv: sB.avgTime },
+    { label: 'Best Response Time', a: sA.bestTime ? (sA.bestTime/1000).toFixed(2)+'s' : '-', b: sB.bestTime ? (sB.bestTime/1000).toFixed(2)+'s' : '-', higherBetter: false, av: sA.bestTime, bv: sB.bestTime },
+    { label: 'Avg Throughput', a: sA.avgTps ? sA.avgTps.toFixed(1)+' t/s' : '-', b: sB.avgTps ? sB.avgTps.toFixed(1)+' t/s' : '-', higherBetter: true, av: sA.avgTps, bv: sB.avgTps },
     { label: 'Total Wins', a: sA.wins, b: sB.wins, higherBetter: true, av: sA.wins, bv: sB.wins },
     { label: 'Score', a: sA.score, b: sB.score, higherBetter: true, av: sA.score, bv: sB.score },
-    { label: 'H2H Win Rate', a: bothSucceeded ? (winsA/bothSucceeded*100).toFixed(1)+'%' : '—', b: bothSucceeded ? (winsB/bothSucceeded*100).toFixed(1)+'%' : '—', higherBetter: true, av: winsA, bv: winsB },
+    { label: 'H2H Win Rate', a: bothSucceeded ? (winsA/bothSucceeded*100).toFixed(1)+'%' : '-', b: bothSucceeded ? (winsB/bothSucceeded*100).toFixed(1)+'%' : '-', higherBetter: true, av: winsA, bv: winsB },
   ];
 
   const colorA = modelColor(modelA), colorB = modelColor(modelB);
