@@ -438,6 +438,60 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
   background:rgba(0,200,255,0.08);padding:2px 6px;border-radius:4px;color:var(--blue);
 }
 
+/* ── Latest run bar ── */
+.latest-run-bar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:11px 18px;border-radius:var(--radius);
+  background:var(--bg-card);border:1px solid var(--border);
+  backdrop-filter:blur(14px);margin-bottom:14px;
+  font-size:12px;color:var(--text-dim);
+}
+.latest-run-bar .lrb-time{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text)}
+.latest-run-bar .lrb-score{font-family:'JetBrains Mono',monospace;font-weight:700}
+.latest-run-bar .lrb-fastest{color:var(--accent);font-weight:600}
+.latest-run-bar .lrb-sep{color:var(--text-muted)}
+
+/* ── Hero row ── */
+.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+@media(max-width:900px){.hero-row{grid-template-columns:1fr}}
+.hero-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px;
+  backdrop-filter:blur(14px);box-shadow:var(--shadow-sm);
+  transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.hero-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;background:linear-gradient(135deg,rgba(118,185,0,0.045) 0%,transparent 55%)}
+.hero-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-glow);border-color:rgba(118,185,0,0.18)}
+.hero-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.9px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.hero-label .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent-glow);flex-shrink:0}
+.hero-model{font-size:15px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.hero-metric{font-size:26px;font-weight:800;color:var(--accent);font-family:'JetBrains Mono',monospace;line-height:1;letter-spacing:-0.5px}
+.hero-meta{font-size:11px;color:var(--text-dim);margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ── Provider face-off ── */
+.faceoff-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:start;margin-top:8px}
+.faceoff-side{padding:0 16px}
+.faceoff-side:first-child{padding-left:0}
+.faceoff-side:last-child{padding-right:0;text-align:right}
+.faceoff-name{font-size:12px;font-weight:800;letter-spacing:0.5px;margin-bottom:14px;padding:4px 10px;border-radius:var(--radius-xs);display:inline-block}
+.faceoff-divider{width:1px;background:var(--border-bright);align-self:stretch;margin:0 8px}
+.faceoff-stat{margin-bottom:14px}
+.faceoff-stat-val{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.faceoff-stat-lbl{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.7px;font-weight:600;margin-top:2px}
+.faceoff-winner{color:var(--accent)}
+
+/* ── Live status grid ── */
+.status-grid{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.status-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-xs);transition:background 0.15s}
+.status-row:hover{background:rgba(255,255,255,0.03)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.up{background:var(--success);box-shadow:0 0 6px rgba(34,197,94,0.5)}
+.status-dot.down{background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.4)}
+.status-dot.skip{background:var(--text-muted)}
+.status-model{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-family:'JetBrains Mono',monospace}
+.status-time{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -522,33 +576,43 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
     <section data-tab="overview" class="active">
       <div class="section-header mb-4">
         <div class="section-title-wrap">
-          <div class="section-title">Dashboard Overview</div>
+          <div class="section-title">Overview</div>
           <div class="section-sub" id="overview-sub"></div>
         </div>
+        <div class="filter-btns">
+          <button class="filter-btn active" data-overview-source="all">All</button>
+          <button class="filter-btn" data-overview-source="nim">NIM</button>
+          <button class="filter-btn" data-overview-source="openrouter">OpenRouter</button>
+        </div>
       </div>
-      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <!-- Latest run banner -->
+      <div id="latest-run-bar"></div>
+
+      <!-- Hero: top 3 answers -->
+      <div class="hero-row" id="hero-row"></div>
+
+      <!-- Provider face-off + live status -->
       <div class="chart-row chart-row-2" style="margin-bottom:14px">
         <div class="card">
-          <div class="card-title"><span class="dot"></span>Success Count per Run</div>
-          <div class="chart-wrap"><canvas id="chart-success-count"></canvas></div>
+          <div class="card-title"><span class="dot"></span>Provider Face-Off</div>
+          <div id="provider-faceoff"></div>
         </div>
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>Live Status — Latest Run</div>
+          <div id="live-status" style="max-height:280px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+      <!-- Trend charts -->
+      <div class="chart-row chart-row-2">
         <div class="card">
           <div class="card-title"><span class="dot"></span>Success Rate Over Time</div>
           <div class="chart-wrap"><canvas id="chart-success-rate"></canvas></div>
         </div>
-      </div>
-      <div class="chart-row chart-row-3">
         <div class="card">
-          <div class="card-title"><span class="dot"></span>Top 10 Fastest Models (Avg)</div>
-          <div class="chart-wrap-lg"><canvas id="chart-fastest"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title"><span class="dot"></span>Top 10 Throughput (tok/s)</div>
-          <div class="chart-wrap-lg"><canvas id="chart-throughput"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title"><span class="dot"></span>Model Reliability</div>
-          <div class="reliability-grid" id="reliability-grid" style="height:264px;overflow-y:auto"></div>
+          <div class="card-title"><span class="dot"></span>Top 10 Fastest (Avg Response)</div>
+          <div class="chart-wrap"><canvas id="chart-fastest"></canvas></div>
         </div>
       </div>
     </section>
@@ -565,6 +629,16 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
         <div class="search-wrap">
           <span class="search-icon"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14.5" y2="14.5"/></svg></span>
           <input class="search-input" id="lb-search" type="text" placeholder="Filter by model name…">
+        </div>
+        <div class="filter-btns">
+          <button class="filter-btn active" data-source="all">All</button>
+          <button class="filter-btn" data-source="nim">NIM only</button>
+          <button class="filter-btn" data-source="openrouter">OpenRouter only</button>
+        </div>
+        <div class="filter-btns">
+          <button class="filter-btn active" data-minruns="0">All runs</button>
+          <button class="filter-btn" data-minruns="5">5+ runs</button>
+          <button class="filter-btn" data-minruns="20">20+ runs</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -774,6 +848,9 @@ const state = {
   explorerModel: 'qwen/qwen3-coder-480b-a35b-instruct',
   lbSort: { col: 'score', dir: 'desc' },
   lbFilter: '',
+  lbSource: 'all',
+  lbMinRuns: 0,
+  overviewSource: 'all',
   timelineFilter: 'all',
   modalResponse: '',
   rendered: {},        // track which tabs have been rendered
@@ -797,7 +874,7 @@ function isOpenRouter(m) { return m.includes(':free'); }
 function shortModel(m) { return (m.split('/')[1] || m).replace(/:free$/, ''); }
 function getProvider(m) { return m.split('/')[0]; }
 function sourceBadge(m) {
-  if (isOpenRouter(m)) return '<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:0.5px;background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25);margin-right:5px;flex-shrink:0">OR</span>';
+  if (isOpenRouter(m)) return '<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:0.5px;background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25);margin-right:5px;flex-shrink:0">OPENROUTER</span>';
   return '<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:0.5px;background:rgba(118,185,0,0.1);color:#76b900;border:1px solid rgba(118,185,0,0.25);margin-right:5px;flex-shrink:0">NIM</span>';
 }
 function providerMeta(m) { return PROVIDER_META[getProvider(m)] || { name: getProvider(m), color: '#666688' }; }
@@ -947,8 +1024,11 @@ function processData(data) {
       avgTime: times.length ? avg(times) : null,
       bestTime: times.length ? Math.min(...times) : null,
       avgTps: tpsArr.length ? avg(tpsArr) : null,
-      wins: 0, errors: {}, lastSeen: null,
+      wins: 0, errors: {}, lastSeen: null, runsSinceFirst: 0,
     };
+
+    const firstNonNull = results.findIndex(r => r !== null);
+    modelStats[model].runsSinceFirst = firstNonNull === -1 ? 0 : results.length - firstNonNull;
 
     for (let i = results.length - 1; i >= 0; i--) {
       if (results[i] && results[i].success) { modelStats[model].lastSeen = runs[i]?.timestamp || null; break; }
@@ -975,7 +1055,12 @@ function processData(data) {
     const s = modelStats[model];
     const speedScore = s.avgTime != null ? (1 - (s.avgTime - minTime) / Math.max(maxTime - minTime, 1)) * 100 : 0;
     const tpsScore = s.avgTps != null ? ((s.avgTps - minTps) / Math.max(maxTps - minTps, 1)) * 100 : 0;
-    s.score = Math.round(s.uptime * 40 + speedScore * 0.3 + tpsScore * 0.3);
+    // coverage weight: models with few runs get a confidence penalty
+    const firstIdx = s.results.findIndex(r => r !== null);
+    const runsSince = firstIdx === -1 ? 1 : state.runs ? state.runs.length - firstIdx : s.totalRuns;
+    const coverageWeight = Math.min(1, s.totalRuns / Math.max(runsSince, 1));
+    const rawScore = s.uptime * 40 + speedScore * 0.3 + tpsScore * 0.3;
+    s.score = Math.round(rawScore * (0.4 + 0.6 * coverageWeight));
 
     const half = Math.floor(s.responseTimes.length / 2);
     const firstHalf = s.responseTimes.slice(0, half).filter(v => v != null);
@@ -991,65 +1076,169 @@ function processData(data) {
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function renderOverview() {
-  const { runs, modelNames, modelStats } = state;
+  const { runs, modelStats } = state;
 
-  const totalRuns = runs.length;
-  const allUptimes = modelNames.map(m => modelStats[m].uptime);
-  const avgSuccessRate = avg(allUptimes) * 100;
+  const allNames = state.modelNames;
+  const nimModels = allNames.filter(m => !isOpenRouter(m));
+  const orModels  = allNames.filter(m =>  isOpenRouter(m));
+  const modelNames = state.overviewSource === 'nim' ? nimModels
+    : state.overviewSource === 'openrouter' ? orModels
+    : allNames;
 
-  let bestTimeModel = null, bestTimeVal = Infinity;
-  let bestTpsModel = null, bestTpsVal = 0;
-  for (const m of modelNames) {
-    const s = modelStats[m];
-    if (s.avgTime != null && s.avgTime < bestTimeVal) { bestTimeVal = s.avgTime; bestTimeModel = m; }
-    if (s.avgTps != null && s.avgTps > bestTpsVal) { bestTpsVal = s.avgTps; bestTpsModel = m; }
+  // ── Latest run banner ──────────────────────────────────────────────────────
+  const latestRun = runs[runs.length - 1];
+  if (latestRun) {
+    const lrTotal = latestRun.summary?.totalModels || latestRun.models.length;
+    const lrSucc  = latestRun.summary?.successCount ?? latestRun.models.filter(m => m.success).length;
+    const lrFastest = latestRun.summary?.fastestModel ? shortModel(latestRun.summary.fastestModel) : '—';
+    const lrTime = latestRun.summary?.fastestTime ? (latestRun.summary.fastestTime / 1000).toFixed(2) + 's' : '';
+    const lrPct = Math.round(lrSucc / lrTotal * 100);
+    const lrColor = lrPct >= 70 ? '#22c55e' : lrPct >= 40 ? '#f59e0b' : '#ef4444';
+    document.getElementById('latest-run-bar').innerHTML = `
+      <div class="latest-run-bar">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)">Latest Run</span>
+        <span class="lrb-time">${fmtTimestamp(latestRun.timestamp)}</span>
+        <span class="lrb-sep">·</span>
+        <span class="lrb-score" style="color:${lrColor}">${lrSucc}/${lrTotal} passed</span>
+        <span class="lrb-sep">·</span>
+        <span>Fastest: <span class="lrb-fastest">${lrFastest}</span>${lrTime ? ' in ' + lrTime : ''}</span>
+        <span class="lrb-sep">·</span>
+        <span style="color:var(--text-muted)">${runs.length} total benchmark runs</span>
+      </div>`;
   }
-  const mostReliable = [...modelNames].sort((a, b) => modelStats[b].uptime - modelStats[a].uptime)[0];
 
-  const kpiData = [
-    { label: 'Total Runs', val: totalRuns, sub: `${runs[0]?.timestamp?.slice(0,10)} → ${runs[runs.length-1]?.timestamp?.slice(0,10)}`, decimals: 0 },
-    { label: 'Avg Success Rate', val: avgSuccessRate, suffix: '%', decimals: 1, sub: 'across all runs & models' },
-    { label: 'Avg Best Response', val: bestTimeVal / 1000, suffix: 's', decimals: 2, sub: bestTimeModel ? shortModel(bestTimeModel) : '' },
-    { label: 'Avg Best Throughput', val: bestTpsVal, suffix: ' t/s', decimals: 1, sub: bestTpsModel ? shortModel(bestTpsModel) : '' },
-    { label: 'Most Reliable', val: (modelStats[mostReliable]?.uptime || 0) * 100, suffix: '%', decimals: 1, sub: mostReliable ? shortModel(mostReliable) : '' },
+  // ── Hero cards ─────────────────────────────────────────────────────────────
+  // Fastest: lowest avgTime, require 3+ runs for fairness
+  const qualifiedByTime = modelNames.filter(m => modelStats[m].avgTime != null && modelStats[m].totalRuns >= 3);
+  const fastestModel = qualifiedByTime.sort((a,b) => modelStats[a].avgTime - modelStats[b].avgTime)[0] || null;
+
+  // Best throughput: highest avgTps, require 3+ runs
+  const qualifiedByTps = modelNames.filter(m => modelStats[m].avgTps != null && modelStats[m].totalRuns >= 3);
+  const tpsModel = qualifiedByTps.sort((a,b) => modelStats[b].avgTps - modelStats[a].avgTps)[0] || null;
+
+  // Most reliable: highest coverage-weighted uptime, require 5+ runs
+  const qualifiedByUptime = modelNames.filter(m => modelStats[m].totalRuns >= 5);
+  const reliableModel = qualifiedByUptime.sort((a,b) => {
+    const wa = modelStats[a].uptime * Math.min(1, modelStats[a].totalRuns / modelStats[a].runsSinceFirst);
+    const wb = modelStats[b].uptime * Math.min(1, modelStats[b].totalRuns / modelStats[b].runsSinceFirst);
+    return wb - wa;
+  })[0] || null;
+
+  function heroCard(label, model, metricHtml, metaHtml, onclick) {
+    const noData = `<div class="hero-metric" style="color:var(--text-muted);font-size:16px">No data yet</div>`;
+    return `<div class="hero-card" onclick="${onclick}">
+      <div class="hero-label"><span class="dot"></span>${label}</div>
+      <div class="hero-model">${model ? shortModel(model) : '—'}</div>
+      ${model ? metricHtml : noData}
+      ${model ? `<div class="hero-meta">${sourceBadge(model)}${providerChip(model, true)}${metaHtml}</div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('hero-row').innerHTML = [
+    heroCard(
+      'Fastest Model',
+      fastestModel,
+      `<div class="hero-metric">${fastestModel ? (modelStats[fastestModel].avgTime/1000).toFixed(2)+'s' : ''}</div>`,
+      `<span style="color:var(--text-dim);font-size:11px">avg response · ${fastestModel ? modelStats[fastestModel].totalRuns : 0} runs</span>`,
+      fastestModel ? `state.explorerModel='${fastestModel}';switchTab('explorer')` : ''
+    ),
+    heroCard(
+      'Best Throughput',
+      tpsModel,
+      `<div class="hero-metric">${tpsModel ? modelStats[tpsModel].avgTps.toFixed(1)+' t/s' : ''}</div>`,
+      `<span style="color:var(--text-dim);font-size:11px">avg tok/s · ${tpsModel ? modelStats[tpsModel].totalRuns : 0} runs</span>`,
+      tpsModel ? `state.explorerModel='${tpsModel}';switchTab('explorer')` : ''
+    ),
+    heroCard(
+      'Most Reliable',
+      reliableModel,
+      `<div class="hero-metric" style="color:var(--success)">${reliableModel ? (modelStats[reliableModel].uptime*100).toFixed(1)+'%' : ''}</div>`,
+      `<span style="color:var(--text-dim);font-size:11px">uptime · ${reliableModel ? modelStats[reliableModel].totalRuns : 0} runs</span>`,
+      reliableModel ? `state.explorerModel='${reliableModel}';switchTab('explorer')` : ''
+    ),
+  ].join('');
+
+  // ── Provider face-off ──────────────────────────────────────────────────────
+  function providerStats(models) {
+    const withTime = models.filter(m => modelStats[m].avgTime != null && modelStats[m].totalRuns >= 3);
+    const withTps  = models.filter(m => modelStats[m].avgTps  != null && modelStats[m].totalRuns >= 3);
+    const withUptime = models.filter(m => modelStats[m].totalRuns >= 3);
+    return {
+      count: models.length,
+      avgTime: withTime.length ? avg(withTime.map(m => modelStats[m].avgTime)) : null,
+      avgTps:  withTps.length  ? avg(withTps.map(m => modelStats[m].avgTps))   : null,
+      avgUptime: withUptime.length
+        ? avg(withUptime.map(m => modelStats[m].uptime * Math.min(1, modelStats[m].totalRuns / Math.max(1, modelStats[m].runsSinceFirst))))
+        : null,
+    };
+  }
+  const nimStats = providerStats(nimModels);
+  const orStats  = providerStats(orModels);
+
+  function faceoffStatHtml(labelNim, valNim, labelOr, valOr, higherBetter, fmt) {
+    const nv = valNim, ov = valOr;
+    const nimWins = nv != null && ov != null && (higherBetter ? nv > ov : nv < ov);
+    const orWins  = nv != null && ov != null && (higherBetter ? ov > nv : ov < nv);
+    return `
+      <div class="faceoff-stat"><div class="faceoff-stat-val ${nimWins?'faceoff-winner':''}">${nv != null ? fmt(nv) : '—'}</div><div class="faceoff-stat-lbl">${labelNim}</div></div>
+      <div class="faceoff-stat" style="text-align:right"><div class="faceoff-stat-val ${orWins?'faceoff-winner':''}">${ov != null ? fmt(ov) : '—'}</div><div class="faceoff-stat-lbl">${labelOr}</div></div>`;
+  }
+
+  const faceoffRows = [
+    { label: 'Models', nimVal: nimStats.count, orVal: orStats.count, higher: true, fmt: v => v },
+    { label: 'Avg Response', nimVal: nimStats.avgTime, orVal: orStats.avgTime, higher: false, fmt: v => (v/1000).toFixed(2)+'s' },
+    { label: 'Avg Throughput', nimVal: nimStats.avgTps, orVal: orStats.avgTps, higher: true, fmt: v => v.toFixed(1)+' t/s' },
+    { label: 'Avg Uptime', nimVal: nimStats.avgUptime, orVal: orStats.avgUptime, higher: true, fmt: v => (v*100).toFixed(1)+'%' },
   ];
 
-  const kpiGrid = document.getElementById('kpi-grid');
-  kpiGrid.innerHTML = kpiData.map(k => `
-    <div class="kpi-card">
-      <div class="kpi-value" id="kpi-val-${k.label.replace(/\s/g,'_')}">0${k.suffix||''}</div>
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>`).join('');
+  document.getElementById('provider-faceoff').innerHTML = `
+    <div class="faceoff-grid">
+      <div class="faceoff-side">
+        <div class="faceoff-name" style="background:rgba(118,185,0,0.1);color:#76b900;border:1px solid rgba(118,185,0,0.25)">NIM</div>
+        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.nimVal>r.orVal:r.nimVal<r.orVal))?'faceoff-winner':''}">${r.nimVal!=null?r.fmt(r.nimVal):'—'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
+      </div>
+      <div class="faceoff-divider"></div>
+      <div class="faceoff-side" style="text-align:right">
+        <div class="faceoff-name" style="background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25)">OPENROUTER</div>
+        ${faceoffRows.map(r => `<div class="faceoff-stat"><div class="faceoff-stat-val ${(r.nimVal!=null&&r.orVal!=null&&(r.higher?r.orVal>r.nimVal:r.orVal<r.nimVal))?'faceoff-winner':''}">${r.orVal!=null?r.fmt(r.orVal):'—'}</div><div class="faceoff-stat-lbl">${r.label}</div></div>`).join('')}
+      </div>
+    </div>`;
 
-  kpiData.forEach(k => {
-    const el = document.getElementById('kpi-val-' + k.label.replace(/\s/g,'_'));
-    if (el) animateCounter(el, k.val, 1200, k.decimals || 0, k.suffix || '');
-  });
+  // ── Live status ────────────────────────────────────────────────────────────
+  const latest = runs[runs.length - 1];
+  const statusModels = latest
+    ? [...modelNames].sort((a,b) => {
+        const ra = latest.models.find(m => m.model === a);
+        const rb = latest.models.find(m => m.model === b);
+        // failures first, then skipped, then successes
+        const scoreA = !ra ? 1 : ra.success ? 2 : 0;
+        const scoreB = !rb ? 1 : rb.success ? 2 : 0;
+        return scoreA - scoreB;
+      })
+    : modelNames;
 
-  document.getElementById('overview-sub').textContent =
-    `${totalRuns} benchmark runs · ${modelNames.length} models · ${runs[0]?.timestamp?.slice(0,10)} to ${runs[runs.length-1]?.timestamp?.slice(0,10)}`;
+  document.getElementById('live-status').innerHTML = `<div class="status-grid">${
+    statusModels.map(model => {
+      const entry = latest?.models.find(m => m.model === model);
+      const dotCls = !entry ? 'skip' : entry.success ? 'up' : 'down';
+      const timeStr = entry?.success && entry.responseTime
+        ? (entry.responseTime/1000).toFixed(2)+'s' : entry && !entry.success ? 'fail' : '—';
+      return `<div class="status-row" onclick="state.explorerModel='${model}';switchTab('explorer')" style="cursor:pointer">
+        <span class="status-dot ${dotCls}"></span>
+        ${sourceBadge(model)}
+        ${providerChip(model, true)}
+        <span class="status-model">${shortModel(model)}</span>
+        <span class="status-time" style="color:${dotCls==='up'?'var(--success)':dotCls==='down'?'var(--danger)':'var(--text-muted)'}">${timeStr}</span>
+      </div>`;
+    }).join('')
+  }</div>`;
 
+  // ── Trend charts ───────────────────────────────────────────────────────────
   const labels = runs.map(r => fmtTimestampShort(r.timestamp));
-  const successCounts = runs.map(r => r.summary?.successCount ?? r.models.filter(m => m.success).length);
   const successRates = runs.map(r => {
     const total = r.summary?.totalModels || r.models.length;
-    const succ = r.summary?.successCount ?? r.models.filter(m => m.success).length;
-    return (succ / total) * 100;
-  });
-
-  destroyChart('successCount');
-  state.charts.successCount = new Chart(document.getElementById('chart-success-count'), {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Successes', data: successCounts,
-      borderColor: '#76b900', backgroundColor: 'rgba(118,185,0,0.07)', fill: true,
-      tension: 0.35, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { ...CHART_DEFAULTS.tooltip,
-        callbacks: { title: (i) => `Run ${i[0].dataIndex + 1}: ${labels[i[0].dataIndex]}` } } },
-      scales: { x: { display: false }, y: { min: 0, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { stepSize: 5 } } }
-    }
+    const succ  = r.summary?.successCount ?? r.models.filter(m => m.success).length;
+    return total ? (succ / total) * 100 : 0;
   });
 
   destroyChart('successRate');
@@ -1062,56 +1251,35 @@ function renderOverview() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { ...CHART_DEFAULTS.tooltip,
         callbacks: { label: (item) => `${item.raw.toFixed(1)}% success` } } },
-      scales: { x: { display: false }, y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + '%' } } }
+      scales: { x: { display: false }, y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v+'%' } } }
     }
   });
 
-  const modelsWithTime = modelNames.filter(m => modelStats[m].avgTime != null)
-    .sort((a, b) => modelStats[a].avgTime - modelStats[b].avgTime).slice(0, 10);
+  // top 10 fastest (qualified models only, 3+ runs)
+  const modelsWithTime = modelNames
+    .filter(m => modelStats[m].avgTime != null && modelStats[m].totalRuns >= 3)
+    .sort((a,b) => modelStats[a].avgTime - modelStats[b].avgTime).slice(0, 10);
 
   destroyChart('fastest');
   state.charts.fastest = new Chart(document.getElementById('chart-fastest'), {
     type: 'bar',
     data: { labels: modelsWithTime.map(m => shortModel(m)),
-      datasets: [{ data: modelsWithTime.map(m => modelStats[m].avgTime / 1000),
-        backgroundColor: modelsWithTime.map((_, i) => i === 0 ? '#76b900cc' : '#76b90040'),
-        borderColor: modelsWithTime.map((_, i) => i === 0 ? '#76b900' : '#76b90066'),
-        borderWidth: 1, borderRadius: 5 }] },
+      datasets: [{ data: modelsWithTime.map(m => modelStats[m].avgTime/1000),
+        backgroundColor: modelsWithTime.map((_,i) => i===0?'#76b900cc':'#76b90040'),
+        borderColor: modelsWithTime.map((_,i) => i===0?'#76b900':'#76b90066'),
+        borderWidth:1, borderRadius:4 }] },
     options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { ...CHART_DEFAULTS.tooltip,
-        callbacks: { label: (item) => `Avg: ${item.raw.toFixed(2)}s` } } },
-      scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + 's' } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{...CHART_DEFAULTS.tooltip,
+        callbacks:{label:(item)=>`${item.raw.toFixed(2)}s`}}},
+      scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{callback:v=>v+'s'}},
+        y:{grid:{display:false},ticks:{font:{size:10}}} }
     }
   });
 
-  const modelsWithTps = modelNames.filter(m => modelStats[m].avgTps != null)
-    .sort((a, b) => modelStats[b].avgTps - modelStats[a].avgTps).slice(0, 10);
+  document.getElementById('overview-sub').textContent =
+    `${modelNames.length} models · ${runs.length} benchmark runs · last: ${fmtTimestamp(runs[runs.length-1]?.timestamp||'')}`;
 
-  destroyChart('throughput');
-  state.charts.throughput = new Chart(document.getElementById('chart-throughput'), {
-    type: 'bar',
-    data: { labels: modelsWithTps.map(m => shortModel(m)),
-      datasets: [{ data: modelsWithTps.map(m => modelStats[m].avgTps),
-        backgroundColor: modelsWithTps.map((_, i) => i === 0 ? '#00c8ffcc' : '#00c8ff40'),
-        borderColor: modelsWithTps.map((_, i) => i === 0 ? '#00c8ff' : '#00c8ff66'),
-        borderWidth: 1, borderRadius: 5 }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { ...CHART_DEFAULTS.tooltip,
-        callbacks: { label: (item) => `${item.raw.toFixed(1)} tok/s` } } },
-      scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + ' t/s' } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
-    }
-  });
-
-  const sorted = [...modelNames].sort((a, b) => modelStats[b].uptime - modelStats[a].uptime);
-  document.getElementById('reliability-grid').innerHTML = sorted.map(m => {
-    const u = modelStats[m].uptime;
-    const cls = u >= 0.7 ? 'green' : u >= 0.4 ? 'yellow' : 'red';
-    return `<div class="rel-pill ${cls}"><span class="dot"></span>${shortModel(m)} <span style="opacity:0.6">${(u*100).toFixed(0)}%</span></div>`;
-  }).join('');
 }
 
 // ─── Leaderboard Tab ──────────────────────────────────────────────────────────
@@ -1125,11 +1293,14 @@ function renderLeaderboard() {
 }
 
 function renderLbTable() {
-  const { lbData, lbSort, lbFilter } = state;
+  const { lbData, lbSort, lbFilter, lbSource, lbMinRuns } = state;
   if (!lbData) return;
 
   let rows = [...lbData];
   if (lbFilter) rows = rows.filter(r => r.model.toLowerCase().includes(lbFilter.toLowerCase()));
+  if (lbSource === 'nim') rows = rows.filter(r => !isOpenRouter(r.model));
+  if (lbSource === 'openrouter') rows = rows.filter(r => isOpenRouter(r.model));
+  if (lbMinRuns > 0) rows = rows.filter(r => r.totalRuns >= lbMinRuns);
   rows.sort((a, b) => {
     let av = a[lbSort.col], bv = b[lbSort.col];
     if (av == null) av = lbSort.dir === 'asc' ? Infinity : -Infinity;
@@ -1149,6 +1320,12 @@ function renderLbTable() {
       : `<span class="trend-indicator trend-flat" title="Stable">→</span>`;
     const last10 = r.responseTimes.slice(-10);
     const spark = sparklineSVG(last10, 96, 24, modelColor(r.model));
+    const firstIdx2 = r.results.findIndex(res => res !== null);
+    const runsSince = firstIdx2 === -1 ? state.runs.length : state.runs.length - firstIdx2;
+    const coveragePct = runsSince ? Math.round(r.totalRuns / runsSince * 100) : 100;
+    const partialTag = coveragePct < 50
+      ? `<span style="margin-left:6px;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)" title="Tested in ${r.totalRuns} of ${runsSince} runs since first seen">${coveragePct}% coverage</span>`
+      : '';
     let rankCell;
     if (r.rank === 1) rankCell = `<span class="rank-medal rank-gold" title="#1">1</span>`;
     else if (r.rank === 2) rankCell = `<span class="rank-medal rank-silver" title="#2">2</span>`;
@@ -1157,7 +1334,7 @@ function renderLbTable() {
 
     return `<tr data-model="${r.model}">
       <td>${rankCell}</td>
-      <td><div class="model-name-cell">${sourceBadge(r.model)}${providerChip(r.model, true)}<span class="model-name-text" title="${r.model}">${shortModel(r.model)}</span>${trendHtml}</div></td>
+      <td><div class="model-name-cell">${sourceBadge(r.model)}${providerChip(r.model, true)}<span class="model-name-text" title="${r.model}">${shortModel(r.model)}</span>${trendHtml}${partialTag}</div></td>
       <td><div class="score-cell"><span class="score-num" style="color:${scoreColor}">${r.score}</span></div></td>
       <td><div class="uptime-cell"><span class="uptime-val" style="color:${uptimeColor}">${uptimePct}%</span><div class="uptime-bar"><div class="uptime-fill" style="width:${uptimePct}%;background:${uptimeColor}"></div></div></div></td>
       <td class="mono">${r.avgTime ? (r.avgTime/1000).toFixed(2)+'s' : '—'}</td>
@@ -1189,6 +1366,24 @@ function initLeaderboardSort() {
 
   const debouncedSearch = debounce(e => { state.lbFilter = e.target.value; renderLbTable(); }, 200);
   document.getElementById('lb-search').addEventListener('input', debouncedSearch);
+
+  document.querySelectorAll('.filter-btn[data-source]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn[data-source]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.lbSource = btn.dataset.source;
+      renderLbTable();
+    });
+  });
+
+  document.querySelectorAll('.filter-btn[data-minruns]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn[data-minruns]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.lbMinRuns = parseInt(btn.dataset.minruns);
+      renderLbTable();
+    });
+  });
 }
 
 // ─── Explorer Tab ─────────────────────────────────────────────────────────────
@@ -1196,7 +1391,7 @@ function populateExplorerSelect() {
   const sel = document.getElementById('explorer-select');
   const sorted = [...state.modelNames].sort((a,b) => state.modelStats[b].score - state.modelStats[a].score);
   sel.innerHTML = sorted.map(m =>
-    `<option value="${m}"${m === state.explorerModel ? ' selected' : ''}>${shortModel(m)} (${providerMeta(m).name})</option>`
+    `<option value="${m}"${m === state.explorerModel ? ' selected' : ''}>${shortModel(m)} (${providerMeta(m).name}) [${isOpenRouter(m) ? 'OPENROUTER' : 'NIM'}]</option>`
   ).join('');
   sel.addEventListener('change', e => { state.explorerModel = e.target.value; renderExplorer(); });
 }
@@ -1217,8 +1412,20 @@ function renderExplorer() {
     </span>`;
 
   const uptimeColor = s.uptime >= 0.7 ? 'var(--success)' : s.uptime >= 0.4 ? 'var(--warning)' : 'var(--danger)';
+  // runs since model first appeared (first non-null result index)
+  const firstIdx = s.results.findIndex(r => r !== null);
+  const runsSinceFirst = firstIdx === -1 ? 0 : state.runs.length - firstIdx;
+  const coverage = runsSinceFirst ? s.totalRuns / runsSinceFirst : 1;
+  const coverageWarn = coverage < 0.5
+    ? `<div style="margin-top:6px;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">Partial data — added recently</div>`
+    : '';
   document.getElementById('explorer-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-val" style="color:${uptimeColor}">${(s.uptime*100).toFixed(1)}%</div><div class="stat-label">Uptime</div><div class="stat-sub">${s.successCount}/${s.totalRuns} runs</div></div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:${uptimeColor}">${(s.uptime*100).toFixed(1)}%</div>
+      <div class="stat-label">Uptime</div>
+      <div class="stat-sub">${s.successCount} ok · ${s.totalRuns} of ${runsSinceFirst} runs since first seen</div>
+      ${coverageWarn}
+    </div>
     <div class="stat-card"><div class="stat-val">${s.avgTime ? (s.avgTime/1000).toFixed(2)+'s' : '—'}</div><div class="stat-label">Avg Response</div></div>
     <div class="stat-card"><div class="stat-val text-accent">${s.bestTime ? (s.bestTime/1000).toFixed(2)+'s' : '—'}</div><div class="stat-label">Best Response</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${s.avgTps ? s.avgTps.toFixed(1)+' t/s' : '—'}</div><div class="stat-label">Avg Throughput</div></div>`;
@@ -1358,7 +1565,7 @@ function renderTimeline() {
 // ─── Compare Tab ──────────────────────────────────────────────────────────────
 function populateCompareSelects() {
   const sorted = [...state.modelNames].sort((a,b) => state.modelStats[b].score - state.modelStats[a].score);
-  const opts = sorted.map(m => `<option value="${m}">${shortModel(m)} (${providerMeta(m).name})</option>`).join('');
+  const opts = sorted.map(m => `<option value="${m}">${shortModel(m)} (${providerMeta(m).name}) [${isOpenRouter(m) ? 'OPENROUTER' : 'NIM'}]</option>`).join('');
   const selA = document.getElementById('compare-a');
   const selB = document.getElementById('compare-b');
   selA.innerHTML = opts; selB.innerHTML = opts;
@@ -1523,15 +1730,27 @@ async function init() {
     state.modelNames = processed.modelNames;
     state.modelStats = processed.modelStats;
 
-    document.getElementById('nav-status').textContent = `${state.runs.length} runs · ${state.modelNames.length} models`;
+    const nimCount = state.modelNames.filter(m => !isOpenRouter(m)).length;
+    const orCount  = state.modelNames.filter(m =>  isOpenRouter(m)).length;
+    document.getElementById('nav-status').textContent = `${state.runs.length} runs · NIM ${nimCount} · OR ${orCount}`;
 
     populateExplorerSelect();
     populateCompareSelects();
     initLeaderboardSort();
 
+    document.querySelectorAll('.filter-btn[data-overview-source]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn[data-overview-source]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.overviewSource = btn.dataset.overviewSource;
+        state.rendered = {};
+        renderOverview();
+      });
+    });
+
     document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.timelineFilter = btn.dataset.filter;
         renderTimeline();
