@@ -504,7 +504,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
 }
 
 @media(max-width:700px){
-  /* Nav */
+  /* ── Nav ── */
   nav{flex-wrap:wrap;height:auto;padding:10px 12px 8px;gap:6px}
   .nav-brand{margin-right:auto;font-size:18px}
   .nav-status{order:2;margin-left:auto;font-size:10px;padding:3px 8px}
@@ -514,97 +514,94 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
   .nav-tab .tab-label{font-size:9px;letter-spacing:0.3px}
   .nav-tab.active::after{left:4px;right:4px}
 
-  /* Layout - full width, minimal gutters */
-  main{padding:8px 0}
-  .card{border-radius:0;border-left:none;border-right:none;margin:0}
-  .chart-row{gap:0}
-  .chart-row > .card{border-bottom:none}
-  .chart-row > .card:last-child{border-bottom:1px solid var(--border)}
-  .hero-row{gap:0;margin-bottom:0}
-  .hero-card{border-radius:0;border-left:none;border-right:none;border-bottom:none;margin:0}
-  .hero-card:last-child{border-bottom:1px solid var(--border)}
-  .table-wrap{border-radius:0;border-left:none;border-right:none}
-  .run-card{border-radius:0;border-left:none;border-right:none;border-bottom:none}
-  .run-card:last-child{border-bottom:1px solid var(--border)}
-  .run-cards{gap:0}
-  .kpi-grid{gap:0;grid-template-columns:repeat(2,1fr);margin-bottom:0}
-  .kpi-card{border-radius:0;border-right:none;border-bottom:none}
-  .kpi-card:nth-child(even){border-right:1px solid var(--border)}
-  .kpi-card:nth-last-child(-n+2){border-bottom:1px solid var(--border)}
-  .explorer-header{border-radius:0;border-left:none;border-right:none}
-  .stat-card{border-radius:0;border-right:none;border-bottom:none}
-  .stats-row{gap:0;border:1px solid var(--border);margin-bottom:0}
-  .stats-row .stat-card:nth-child(even){border-right:none}
-  .stats-row .stat-card{border-bottom:1px solid var(--border)}
-  .latest-run-bar{border-radius:0;border-left:none;border-right:none;margin-bottom:0}
-  #provider-faceoff,#live-status{padding:0}
-  .section-header{padding:12px 16px 0;margin-bottom:12px}
-  .table-controls{padding:0 12px;margin-bottom:8px}
-  .timeline-controls{padding:0 12px;margin-bottom:8px}
-  .model-selector-wrap{padding:0 12px;margin-bottom:0}
+  /* ── Full-width layout ── */
+  main{padding:0}
 
-  /* Section header */
-  .section-header{flex-direction:column;align-items:flex-start;gap:10px}
+  /* All cards: no side borders, no radius, separated by bottom border */
+  .card,
+  .hero-card,
+  .run-card,
+  .explorer-header,
+  .kpi-card,
+  .stat-card,
+  .latest-run-bar{
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    margin:0;
+  }
+
+  /* Remove gaps - borders do the separation */
+  .chart-row,.hero-row,.run-cards,.kpi-grid,.stats-row{gap:0;margin-bottom:0}
+
+  /* 2-column grids: right border on left column as separator */
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-card:nth-child(odd){border-right:1px solid var(--border)}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .stat-card:nth-child(odd){border-right:1px solid var(--border)}
+
+  /* Table and its wrapper */
+  .table-wrap{border-radius:0;border-left:none;border-right:none}
+
+  /* ── Spacing for non-card content ── */
+  .section-header{flex-direction:column;align-items:flex-start;gap:10px;padding:14px 16px 0;margin-bottom:10px}
   .section-title{font-size:16px}
   .section-sub{padding-left:13px;font-size:12px}
+  .table-controls{flex-direction:column;align-items:stretch;gap:8px;padding:0 12px;margin-bottom:10px}
+  .timeline-controls{padding:0 12px;margin-bottom:10px}
+  .model-selector-wrap{padding:12px 12px 0}
 
-  /* Filter buttons - wrap on small screens */
+  /* ── Filter buttons ── */
   .filter-btns{flex-wrap:wrap;gap:4px}
   .filter-btn{font-size:11px;padding:5px 10px}
-
-  /* Overview */
-  .hero-row{grid-template-columns:1fr}
-  .hero-metric{font-size:22px}
-  .latest-run-bar{gap:8px;padding:10px 14px;font-size:11px}
-  .latest-run-bar .lrb-sep{display:none}
-  .latest-run-bar{flex-direction:column;align-items:flex-start}
-
-  /* Provider face-off - stack vertically */
-  .faceoff-grid{grid-template-columns:1fr;gap:20px}
-  .faceoff-divider{display:none}
-  .faceoff-side{padding:0}
-  .faceoff-side:last-child{text-align:left;border-top:1px solid var(--border);padding-top:16px}
-
-  /* Leaderboard - hide low-priority columns */
-  #lb-table th:nth-child(6),
-  #lb-table td:nth-child(6),
-  #lb-table th:nth-child(8),
-  #lb-table td:nth-child(8),
-  #lb-table th:nth-child(9),
-  #lb-table td:nth-child(9){display:none}
-  .uptime-bar{display:none}
-  .model-name-cell{max-width:160px}
-
-  /* Table controls */
-  .table-controls{flex-direction:column;align-items:stretch;gap:8px}
   .search-wrap{max-width:100%}
 
-  /* Explorer */
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .explorer-header{flex-wrap:wrap;gap:8px}
-  .stat-card .stat-val{font-size:18px}
+  /* ── Overview ── */
+  .hero-row{grid-template-columns:1fr}
+  .hero-card{padding:18px 16px}
+  .hero-metric{font-size:22px}
+  .latest-run-bar{gap:6px;padding:12px 16px;font-size:11px;flex-direction:column;align-items:flex-start}
+  .latest-run-bar .lrb-sep{display:none}
+  #provider-faceoff,.card>.card-title+div{padding:0}
+  .faceoff-grid{grid-template-columns:1fr;gap:0}
+  .faceoff-divider{display:none}
+  .faceoff-side{padding:12px 0}
+  .faceoff-side:last-child{text-align:left;border-top:1px solid var(--border)}
 
-  /* Timeline */
-  .run-card-header{flex-wrap:wrap;gap:8px}
+  /* ── Leaderboard: hide low-value columns ── */
+  #lb-table th:nth-child(6),#lb-table td:nth-child(6),
+  #lb-table th:nth-child(8),#lb-table td:nth-child(8),
+  #lb-table th:nth-child(9),#lb-table td:nth-child(9){display:none}
+  .uptime-bar{display:none}
+  .model-name-cell{max-width:150px}
+
+  /* ── Explorer ── */
+  .explorer-header{flex-wrap:wrap;gap:8px;padding:14px 16px}
+  .stat-card .stat-val{font-size:18px}
+  .stat-card{padding:16px}
+
+  /* ── Timeline ── */
+  .run-card-header{flex-wrap:wrap;gap:8px;padding:12px 16px}
   .run-fastest{margin-left:0;width:100%}
   .run-card-time{min-width:auto;font-size:12px}
 
-  /* Compare */
-  .compare-selectors{grid-template-columns:1fr}
+  /* ── Compare ── */
+  .compare-selectors{grid-template-columns:1fr;padding:0 12px}
   .swap-btn{width:100%;border-radius:var(--radius-sm)}
   .h2h-table td{padding:7px 8px;font-size:12px}
   .h2h-table .h2h-metric{width:90px;font-size:9px}
 
-  /* Modal */
-  .modal-box{max-height:92vh}
+  /* ── Modal ── */
+  .modal-box{max-height:92vh;border-radius:var(--radius) var(--radius) 0 0}
   .modal-header{padding:14px 16px}
   .modal-body{padding:16px}
 
-  /* Charts - reduce height on mobile */
+  /* ── Charts ── */
   .chart-wrap{height:180px}
-  .chart-wrap-lg{height:210px}
+  .chart-wrap-lg{height:200px}
 
-  /* KPI */
+  /* ── KPI ── */
   .kpi-card{padding:16px}
   .kpi-value{font-size:22px}
 }
