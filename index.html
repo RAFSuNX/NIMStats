@@ -282,7 +282,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
   border-radius:var(--radius);backdrop-filter:blur(14px);box-shadow:var(--shadow-sm);
 }
 .explorer-header h2{font-size:15px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}}
 .stat-card{
   background:var(--bg-card);border:1px solid var(--border);
@@ -571,8 +571,8 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
 
   /* ── Leaderboard: hide low-value columns ── */
   #lb-table th:nth-child(6),#lb-table td:nth-child(6),
-  #lb-table th:nth-child(8),#lb-table td:nth-child(8),
-  #lb-table th:nth-child(9),#lb-table td:nth-child(9){display:none}
+  #lb-table th:nth-child(9),#lb-table td:nth-child(9),
+  #lb-table th:nth-child(10),#lb-table td:nth-child(10){display:none}
   .uptime-bar{display:none}
   .model-name-cell{max-width:150px}
 
@@ -741,6 +741,7 @@ td{padding:11px 16px;color:var(--text);vertical-align:middle}
               <th data-col="avgTime">Avg Time <span class="sort-arrow"></span></th>
               <th data-col="bestTime">Best Time <span class="sort-arrow"></span></th>
               <th data-col="avgTps">Throughput <span class="sort-arrow"></span></th>
+              <th data-col="avgQuality">Quality <span class="sort-arrow"></span></th>
               <th data-col="wins">Wins <span class="sort-arrow"></span></th>
               <th data-col="trend">Trend</th>
             </tr>
@@ -1076,15 +1077,16 @@ function loadFromDb(db) {
   const runById = new Map(runs.map((r, i) => [r._dbId, i]));
 
   const resQ = db.exec(
-    'SELECT run_id, model, success, error, response_time, tokens_generated, total_tokens FROM model_results ORDER BY run_id ASC'
+    'SELECT run_id, model, success, error, response_time, tokens_generated, total_tokens, quality_score FROM model_results ORDER BY run_id ASC'
   );
   if (resQ.length && resQ[0].values.length) {
-    for (const [run_id, model, success, error, rt, tg, tt] of resQ[0].values) {
+    for (const [run_id, model, success, error, rt, tg, tt, qs] of resQ[0].values) {
       const idx = runById.get(run_id);
       if (idx !== undefined) {
         runs[idx].models.push({
           model, success: success === 1, error: error || null,
-          responseTime: rt, tokensGenerated: tg, totalTokens: tt, response: null
+          responseTime: rt, tokensGenerated: tg, totalTokens: tt,
+          qualityScore: qs ?? null, response: null
         });
       }
     }
@@ -1105,6 +1107,7 @@ function processData(data) {
     const times = successes.map(r => r.responseTime).filter(t => t > 0);
     const tpsArr = successes.filter(r => r.responseTime > 0).map(r => r.tokensGenerated / (r.responseTime / 1000));
 
+    const qualityScores = successes.map(r => r.qualityScore).filter(q => q != null);
     modelStats[model] = {
       results, totalRuns: testedResults.length, successCount: successes.length,
       uptime: testedResults.length ? successes.length / testedResults.length : 0,
@@ -1113,6 +1116,7 @@ function processData(data) {
       avgTime: times.length ? avg(times) : null,
       bestTime: times.length ? Math.min(...times) : null,
       avgTps: tpsArr.length ? avg(tpsArr) : null,
+      avgQuality: qualityScores.length ? Math.round(avg(qualityScores)) : null,
       wins: 0, errors: {}, lastSeen: null, runsSinceFirst: 0,
     };
 
@@ -1148,7 +1152,8 @@ function processData(data) {
     const firstIdx = s.results.findIndex(r => r !== null);
     const runsSince = firstIdx === -1 ? 1 : state.runs ? state.runs.length - firstIdx : s.totalRuns;
     const coverageWeight = Math.min(1, s.totalRuns / Math.max(runsSince, 1));
-    const rawScore = s.uptime * 40 + speedScore * 0.3 + tpsScore * 0.3;
+    const qualityPart = s.avgQuality != null ? s.avgQuality * 0.25 : 0;
+    const rawScore = s.uptime * 30 + speedScore * 0.225 + tpsScore * 0.225 + qualityPart;
     s.score = Math.round(rawScore * (0.4 + 0.6 * coverageWeight));
 
     const half = Math.floor(s.responseTimes.length / 2);
@@ -1429,6 +1434,7 @@ function renderLbTable() {
       <td class="mono">${r.avgTime ? (r.avgTime/1000).toFixed(2)+'s' : '-'}</td>
       <td class="mono">${r.bestTime ? (r.bestTime/1000).toFixed(2)+'s' : '-'}</td>
       <td class="mono">${r.avgTps ? r.avgTps.toFixed(1)+' t/s' : '-'}</td>
+      <td>${r.avgQuality != null ? `<span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${r.avgQuality>=70?'var(--success)':r.avgQuality>=40?'var(--warning)':'var(--danger)'}">${r.avgQuality}</span><span style="font-size:10px;color:var(--text-muted)">/100</span>` : '<span style="color:var(--text-muted);font-size:11px">-</span>'}</td>
       <td class="mono text-accent">${r.wins}</td>
       <td>${spark}</td>
     </tr>`;
@@ -1517,7 +1523,8 @@ function renderExplorer() {
     </div>
     <div class="stat-card"><div class="stat-val">${s.avgTime ? (s.avgTime/1000).toFixed(2)+'s' : '-'}</div><div class="stat-label">Avg Response</div></div>
     <div class="stat-card"><div class="stat-val text-accent">${s.bestTime ? (s.bestTime/1000).toFixed(2)+'s' : '-'}</div><div class="stat-label">Best Response</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${s.avgTps ? s.avgTps.toFixed(1)+' t/s' : '-'}</div><div class="stat-label">Avg Throughput</div></div>`;
+    <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${s.avgTps ? s.avgTps.toFixed(1)+' t/s' : '-'}</div><div class="stat-label">Avg Throughput</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${s.avgQuality!=null?(s.avgQuality>=70?'var(--success)':s.avgQuality>=40?'var(--warning)':'var(--danger)'):'var(--text-muted)'}">${s.avgQuality != null ? s.avgQuality+'/100' : '-'}</div><div class="stat-label">Quality Score</div><div class="stat-sub">code + math + logic</div></div>`;
 
   const labels = state.runs.map(r => fmtTimestampShort(r.timestamp));
   const timeData = s.responseTimes.map(v => v != null ? v / 1000 : null);

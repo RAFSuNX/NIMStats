@@ -12,12 +12,12 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from db_utils import write_run  # noqa: E402
+from quality import TEST_PROMPTS, compute_quality  # noqa: E402
 
 API_BASE = os.getenv("API_BASE", "https://integrate.api.nvidia.com/v1")
 API_KEY = os.getenv("NIM_API_KEY", "")
 MODEL_GROUP = os.getenv("MODEL_GROUP", "all")
 REQUEST_TIMEOUT_SECONDS = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "300"))
-PROMPT = "Write a Python function that checks if a number is prime and returns True or False"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 OUTPUT_FILE = SCRIPT_DIR / "results.json"
@@ -42,11 +42,10 @@ ALL_MODELS = [
     "meta/llama-4-maverick-17b-128e-instruct",
     "meta/llama-3.2-90b-vision-instruct",
     "stepfun-ai/step-3.5-flash",
-    "stepfun-ai/step-3.7-flash"
+    "stepfun-ai/step-3.7-flash",
 ]
 
 GROUP1_MODELS = ALL_MODELS[:10]
-
 GROUP2_MODELS = ALL_MODELS[10:]
 
 
@@ -67,6 +66,7 @@ def failure_result(model: str, error: str) -> dict[str, Any]:
         "tokensGenerated": None,
         "totalTokens": None,
         "response": None,
+        "qualityScore": None,
     }
 
 
@@ -93,7 +93,8 @@ def to_int(value: Any) -> int:
         return 0
 
 
-def call_model(model: str, prompt: str) -> dict[str, Any]:
+def call_api(model: str, prompt: str) -> tuple[bool, str, int, int, int, str]:
+    """Returns (success, content, response_time_ms, completion_tokens, total_tokens, error)."""
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -103,7 +104,6 @@ def call_model(model: str, prompt: str) -> dict[str, Any]:
         "stream": False,
     }
     body = json.dumps(payload).encode("utf-8")
-
     request = urllib.request.Request(
         f"{API_BASE}/chat/completions",
         data=body,
@@ -119,34 +119,26 @@ def call_model(model: str, prompt: str) -> dict[str, Any]:
     status_code = 0
 
     try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
-            status_code = response.status
-            raw_body = response.read().decode("utf-8", errors="replace")
+        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
+            status_code = resp.status
+            raw_body = resp.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as exc:
         status_code = getattr(exc, "code", 0) or 0
         raw_body = exc.read().decode("utf-8", errors="replace")
     except TimeoutError:
-        return failure_result(model, f"Request timed out after {REQUEST_TIMEOUT_SECONDS}s")
+        return False, "", 0, 0, 0, f"Request timed out after {REQUEST_TIMEOUT_SECONDS}s"
     except Exception as exc:
-        return failure_result(model, f"Request failed: {exc}")
+        return False, "", 0, 0, 0, f"Request failed: {exc}"
 
     response_time = int((time.perf_counter() - started) * 1000)
 
     if not raw_body.strip():
-        return failure_result(model, "Empty response from API")
+        return False, "", response_time, 0, 0, "Empty response from API"
 
     try:
         data = json.loads(raw_body)
     except json.JSONDecodeError as exc:
-        return {
-            "model": model,
-            "success": False,
-            "error": f"Invalid JSON response: {exc.msg} at line {exc.lineno} column {exc.colno}",
-            "responseTime": response_time,
-            "tokensGenerated": None,
-            "totalTokens": None,
-            "response": raw_body,
-        }
+        return False, "", response_time, 0, 0, f"Invalid JSON: {exc.msg}"
 
     error_obj = data.get("error")
     error_message = ""
@@ -156,76 +148,85 @@ def call_model(model: str, prompt: str) -> dict[str, Any]:
         error_message = error_obj.strip()
 
     if status_code >= 400:
-        if not error_message:
-            error_message = f"HTTP {status_code} returned by API"
-        else:
-            error_message = f"HTTP {status_code}: {error_message}"
-        return failure_result(model, error_message)
+        msg = f"HTTP {status_code}: {error_message}" if error_message else f"HTTP {status_code}"
+        return False, "", response_time, 0, 0, msg
 
     if error_message:
-        return failure_result(model, error_message)
+        return False, "", response_time, 0, 0, error_message
 
     choices = data.get("choices")
     content = ""
     if isinstance(choices, list) and choices:
-        first_choice = choices[0]
-        if isinstance(first_choice, dict):
-            message = first_choice.get("message")
-            if isinstance(message, dict):
-                content = normalize_content(message.get("content"))
+        first = choices[0]
+        if isinstance(first, dict):
+            msg = first.get("message")
+            if isinstance(msg, dict):
+                content = normalize_content(msg.get("content"))
 
     if not content.strip():
-        return failure_result(model, "No content in response")
+        return False, "", response_time, 0, 0, "No content in response"
 
     usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
-    completion_tokens = to_int(usage.get("completion_tokens"))
-    total_tokens = to_int(usage.get("total_tokens"))
+    return True, content, response_time, to_int(usage.get("completion_tokens")), to_int(usage.get("total_tokens")), ""
+
+
+def benchmark_model(model: str) -> dict[str, Any]:
+    """Run all quality test prompts against a model. Speed measured on first prompt."""
+    responses: list[str] = []
+    first_success = False
+    first_error = ""
+    first_time = None
+    first_completion = 0
+    first_total = 0
+
+    for i, prompt in enumerate(TEST_PROMPTS):
+        ok, content, rt, comp, total, err = call_api(model, prompt)
+        if i == 0:
+            first_success = ok
+            first_error = err
+            first_time = rt
+            first_completion = comp
+            first_total = total
+        responses.append(content if ok else "")
+        if i < len(TEST_PROMPTS) - 1:
+            time.sleep(0.5)
+
+    if not first_success:
+        return failure_result(model, first_error)
+
+    quality = compute_quality(responses)
 
     return {
         "model": model,
         "success": True,
-        "responseTime": response_time,
-        "tokensGenerated": completion_tokens,
-        "totalTokens": total_tokens,
-        "response": content,
+        "responseTime": first_time,
+        "tokensGenerated": first_completion,
+        "totalTokens": first_total,
+        "response": responses[0] if responses else None,
         "error": None,
+        "qualityScore": quality["quality_score"],
+        "qualityBreakdown": quality["quality_breakdown"],
     }
 
 
-def compile_output(timestamp: str, prompt: str, models: list[dict[str, Any]]) -> dict[str, Any]:
-    successful = [item for item in models if item.get("success")]
-    success_count = len(successful)
-    total_count = len(models)
-
+def compile_output(timestamp: str, models: list[dict[str, Any]]) -> dict[str, Any]:
+    successful = [m for m in models if m.get("success")]
+    fastest_model, fastest_time = "N/A", 0
     if successful:
-        fastest = min(
-            successful,
-            key=lambda item: item.get("responseTime")
-            if isinstance(item.get("responseTime"), int)
-            else float("inf"),
-        )
+        fastest = min(successful, key=lambda m: m.get("responseTime") or float("inf"))
         fastest_model = fastest.get("model", "N/A")
         fastest_time = fastest.get("responseTime", 0) or 0
-    else:
-        fastest_model = "N/A"
-        fastest_time = 0
-
     return {
         "timestamp": timestamp,
-        "prompt": prompt,
+        "prompt": TEST_PROMPTS[0],
         "models": models,
         "summary": {
-            "successCount": success_count,
-            "totalModels": total_count,
+            "successCount": len(successful),
+            "totalModels": len(models),
             "fastestModel": fastest_model,
             "fastestTime": fastest_time,
         },
     }
-
-
-def update_history(new_run: dict[str, Any]) -> None:
-    write_run(new_run)
-    print(f"History updated: {str(SCRIPT_DIR.parent / 'history.db')}")
 
 
 def main() -> int:
@@ -235,39 +236,32 @@ def main() -> int:
 
     models = selected_models()
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
     group_label = f" (Group: {MODEL_GROUP})" if MODEL_GROUP else ""
-    print(f"Starting NVIDIA NIM Model Benchmarks{group_label}...")
-    print(f"Timestamp: {timestamp}")
-    print(f"Testing {len(models)} models...")
-    print()
+    print(f"Starting NVIDIA NIM benchmarks{group_label} - {len(models)} models, {len(TEST_PROMPTS)} tests each")
+    print(f"Timestamp: {timestamp}\n")
 
     results: list[dict[str, Any]] = []
     for model in models:
         print(f"Testing: {model}")
-        result = call_model(model, PROMPT)
+        result = benchmark_model(model)
         if result.get("success"):
-            print(
-                f"  ✓ Success ({result['responseTime']}ms, {result.get('tokensGenerated', 0)} tokens)"
-            )
+            q = result.get("qualityScore", 0)
+            print(f"  OK  {result['responseTime']}ms  {result.get('tokensGenerated', 0)} tokens  quality={q}/100")
         else:
-            print(f"  ✗ Failed: {result.get('error') or 'Unknown error'}")
+            print(f"  FAIL: {result.get('error') or 'Unknown error'}")
         results.append(result)
         time.sleep(0.5)
 
-    print()
-    print("Compiling results...")
-
-    final_json = compile_output(timestamp, PROMPT, results)
+    final_json = compile_output(timestamp, results)
     OUTPUT_FILE.write_text(json.dumps(final_json, indent=2), encoding="utf-8")
 
-    success_count = final_json["summary"]["successCount"]
-    total_count = final_json["summary"]["totalModels"]
-    print(f"Results saved to {OUTPUT_FILE.name}")
-    print(f"Summary: {success_count}/{total_count} successful")
+    sc = final_json["summary"]["successCount"]
+    tc = final_json["summary"]["totalModels"]
+    print(f"\nResults saved. Summary: {sc}/{tc} successful")
 
     if MODEL_GROUP == "all":
-        update_history(final_json)
+        from db_utils import write_run
+        write_run(final_json)
 
     return 0
 

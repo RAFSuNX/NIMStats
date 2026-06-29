@@ -30,11 +30,18 @@ def init_schema(conn: sqlite3.Connection) -> None:
             response_time    INTEGER,
             tokens_generated INTEGER,
             total_tokens     INTEGER,
-            response         TEXT
+            response         TEXT,
+            quality_score    REAL    DEFAULT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_mr_run   ON model_results(run_id);
         CREATE INDEX IF NOT EXISTS idx_mr_model ON model_results(model);
         CREATE INDEX IF NOT EXISTS idx_runs_ts  ON runs(timestamp);
+    """)
+    # Migrate existing DBs that predate quality_score column
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(model_results)").fetchall()]
+    if "quality_score" not in cols:
+        conn.execute("ALTER TABLE model_results ADD COLUMN quality_score REAL DEFAULT NULL")
+    conn.executescript("""
     """)
 
 
@@ -59,8 +66,8 @@ def write_run(run: dict[str, Any], db_path: Path = HISTORY_DB) -> None:
         run_id = cur.lastrowid
         conn.executemany(
             """INSERT INTO model_results
-               (run_id, model, success, error, response_time, tokens_generated, total_tokens, response)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+               (run_id, model, success, error, response_time, tokens_generated, total_tokens, response, quality_score)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             [
                 (
                     run_id,
@@ -71,6 +78,7 @@ def write_run(run: dict[str, Any], db_path: Path = HISTORY_DB) -> None:
                     m.get("tokensGenerated"),
                     m.get("totalTokens"),
                     m.get("response"),
+                    m.get("qualityScore"),
                 )
                 for m in run.get("models", [])
             ],
