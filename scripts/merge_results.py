@@ -16,16 +16,13 @@ def main() -> int:
     timestamp: str | None = None
     prompt: str | None = None
 
-    for group_file in ["results-group1.json", "results-group2.json",
-                        "results-openrouter-group1.json", "results-openrouter-group2.json"]:
-        path = SCRIPT_DIR / group_file
-        if path.exists():
-            with open(path) as f:
-                data = json.load(f)
-            all_models.extend(data.get("models", []))
-            if not timestamp:
-                timestamp = data.get("timestamp")
-                prompt = data.get("prompt")
+    for path in sorted(SCRIPT_DIR.glob("results-*.json")):
+        with open(path) as f:
+            data = json.load(f)
+        all_models.extend(data.get("models", []))
+        if not timestamp:
+            timestamp = data.get("timestamp")
+            prompt = data.get("prompt")
 
     if not all_models:
         print("No results found!", file=sys.stderr)
@@ -57,11 +54,8 @@ def main() -> int:
     write_run(merged_run)
     print(f"✓ Updated history.db with new run ({success_count}/{total_count} models passed)")
 
-    for group_file in ["results-group1.json", "results-group2.json",
-                        "results-openrouter-group1.json", "results-openrouter-group2.json"]:
-        path = SCRIPT_DIR / group_file
-        if path.exists():
-            path.unlink()
+    for path in SCRIPT_DIR.glob("results-*.json"):
+        path.unlink()
     print("✓ Cleaned up temporary group files")
 
     return 0

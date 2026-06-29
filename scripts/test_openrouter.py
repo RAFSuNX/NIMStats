@@ -17,6 +17,7 @@ from quality import TEST_PROMPTS, compute_quality  # noqa: E402
 API_BASE = "https://openrouter.ai/api/v1"
 API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 MODEL_GROUP = os.getenv("MODEL_GROUP", "all")
+GROUP_COUNT = int(os.getenv("GROUP_COUNT", "2"))
 REQUEST_TIMEOUT_SECONDS = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "120"))
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -46,11 +47,17 @@ def fetch_free_models() -> list[str]:
 
 
 def selected_models(all_models: list[str]) -> list[str]:
-    if MODEL_GROUP == "group1":
-        return all_models[: len(all_models) // 2]
-    if MODEL_GROUP == "group2":
-        return all_models[len(all_models) // 2 :]
-    return all_models
+    if MODEL_GROUP == "all":
+        return all_models
+    # groupN - split all_models into GROUP_COUNT equal slices
+    try:
+        n = int(MODEL_GROUP.replace("group", "")) - 1  # 0-indexed
+    except ValueError:
+        return all_models
+    size = max(1, len(all_models) // GROUP_COUNT)
+    start = n * size
+    end = start + size if n < GROUP_COUNT - 1 else len(all_models)
+    return all_models[start:end]
 
 
 def failure_result(model: str, error: str) -> dict[str, Any]:

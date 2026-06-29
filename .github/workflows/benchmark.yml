@@ -5,80 +5,57 @@ on:
   schedule:
     - cron: '0 * * * *'  # every hour
 
+# To add more OR groups: change or-groups matrix and OR_GROUP_COUNT below
+env:
+  OR_GROUP_COUNT: "2"
+
 jobs:
-  # ── NVIDIA NIM ──────────────────────────────────────────────────────────────
-  test_nim_group1:
+  # ── NVIDIA NIM (hardcoded 2 groups, list is curated) ────────────────────────
+  test_nim:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    strategy:
+      matrix:
+        group: [1, 2]
     steps:
       - uses: actions/checkout@v4
-      - name: Test NIM group 1
+      - name: Test NIM group ${{ matrix.group }}
         env:
           NIM_API_KEY: ${{ secrets.NIM_API_KEY }}
-          MODEL_GROUP: group1
+          MODEL_GROUP: group${{ matrix.group }}
         run: python3 scripts/test_models.py
       - uses: actions/upload-artifact@v4
         with:
-          name: results-group1
+          name: results-group${{ matrix.group }}
           path: scripts/results.json
           retention-days: 1
 
-  test_nim_group2:
+  # ── OpenRouter free models (scale by changing matrix + OR_GROUP_COUNT) ───────
+  test_openrouter:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    strategy:
+      matrix:
+        group: [1, 2]   # add 3, 4... here if OR free models grow
     steps:
       - uses: actions/checkout@v4
-      - name: Test NIM group 2
-        env:
-          NIM_API_KEY: ${{ secrets.NIM_API_KEY }}
-          MODEL_GROUP: group2
-        run: python3 scripts/test_models.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: results-group2
-          path: scripts/results.json
-          retention-days: 1
-
-  # ── OpenRouter free models ──────────────────────────────────────────────────
-  test_openrouter_group1:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test OpenRouter free models (first half)
+      - name: Test OpenRouter free models group ${{ matrix.group }}
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          MODEL_GROUP: group1
+          MODEL_GROUP: group${{ matrix.group }}
+          GROUP_COUNT: ${{ env.OR_GROUP_COUNT }}
         run: python3 scripts/test_openrouter.py
       - uses: actions/upload-artifact@v4
         with:
-          name: results-openrouter-group1
-          path: scripts/results.json
-          retention-days: 1
-
-  test_openrouter_group2:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test OpenRouter free models (second half)
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          MODEL_GROUP: group2
-        run: python3 scripts/test_openrouter.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: results-openrouter-group2
+          name: results-openrouter-group${{ matrix.group }}
           path: scripts/results.json
           retention-days: 1
 
   # ── Merge & commit ──────────────────────────────────────────────────────────
   merge_and_update:
-    needs: [test_nim_group1, test_nim_group2, test_openrouter_group1, test_openrouter_group2]
+    needs: [test_nim, test_openrouter]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -92,21 +69,19 @@ jobs:
 
       - name: Merge results and update history
         run: |
-          mv scripts/results-group1/results.json scripts/results-group1.json || true
-          mv scripts/results-group2/results.json scripts/results-group2.json || true
-          mv scripts/results-openrouter-group1/results.json scripts/results-openrouter-group1.json || true
-          mv scripts/results-openrouter-group2/results.json scripts/results-openrouter-group2.json || true
+          for dir in scripts/results-*/; do
+            name=$(basename "$dir")
+            mv "$dir/results.json" "scripts/${name}.json" || true
+          done
           python3 scripts/merge_results.py
 
-      - name: Push history.db to data branch
+      - name: Push history.db to gh-pages branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Save DB before switching branches
           cp history.db /tmp/history.db
 
-          # Switch to data branch (orphan if it doesn't exist yet)
           if git fetch origin gh-pages 2>/dev/null; then
             git checkout gh-pages
           else
@@ -115,11 +90,8 @@ jobs:
           fi
 
           cp /tmp/history.db history.db
-
           git add history.db
           git commit --allow-empty -m "data: benchmark results"
-
-          # Force push - single commit forever, no log spam
           git push origin gh-pages --force
 
       - name: Trigger Cloudflare Pages deploy
